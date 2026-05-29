@@ -1,0 +1,186 @@
+.Container {
+    background-color: var(--container);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.1);
+    color: var(--header);
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.Header {
+    color: var(--header);
+    font-weight: bold;
+    font-size: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.Label {
+    display: block;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--header);
+    margin-bottom: 0.125rem;
+}
+
+.Input, .TextArea, .Select {
+    width: 100%;
+    background-color: var(--button);
+    border: 1.5px solid var(--wrapper);
+    border-radius: 0.4rem;
+    padding: 0.35rem 0.5rem;
+    color: var(--header);
+    font-size: 0.9rem;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.Input:focus, .TextArea:focus, .Select:focus {
+    border-color: var(--yellowBorder);
+}
+
+.FormGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.FullWidth {
+    grid-column: span 2;
+}
+
+.AssignmentWrapper {
+    background-color: var(--wrapper);
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.AssignmentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.AssignmentItem {
+    background-color: var(--container);
+    border: 1.5px solid var(--wrapper);
+    border-radius: 0.4rem;
+    padding: 0.5rem;
+    margin-bottom: 0.4rem;
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr 1fr 2fr auto;
+    gap: 0.5rem;
+    align-items: end;
+}
+
+.RemoveButton {
+    color: var(--redText);
+    font-weight: bold;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0.25rem;
+    font-size: 1.125rem;
+}
+
+.RemoveButton:hover {
+    color: var(--redBG);
+}
+
+.AddButton {
+    background-color: var(--button);
+    color: var(--redText);
+    border: 2px solid var(--redBorder);
+    padding: 0.2rem 0.6rem;
+    border-radius: 0.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.AddButton:hover {
+    background-color: var(--redBG);
+    color: white;
+}
+
+.SubmitButton {
+    background-color: var(--greenBG);
+    color: var(--greenText);
+    border: 2px solid var(--greenBorder);
+    padding: 0.6rem;
+    border-radius: 0.5rem;
+    font-weight: bold;
+    width: 100%;
+    margin-top: 1rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s;
+}
+
+.SubmitButton:hover {
+    background-color: var(--greenText);
+    color: white;
+}
+
+
+.SecondaryButton {
+    background-color: var(--button);
+    color: var(--header);
+    border: 1.5px solid var(--wrapper);
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.4rem;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.SecondaryButton:hover {
+    background-color: var(--wrapper);
+}
+
+.UrgentCheckbox {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.UrgentLabel {
+    color: var(--redText);
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.AssignmentsList {
+    max-height: 140px;
+    overflow-y: auto;
+    padding-right: 0.4rem;
+}
+
+
+.AssignmentsList::-webkit-scrollbar {
+    width: 6px;
+}
+.AssignmentsList::-webkit-scrollbar-thumb {
+    background: var(--wrapper);
+    border-radius: 10px;
+}
+
+@media (max-width: 768px) {
+    .FormGrid {
+        grid-template-columns: 1fr;
+    }
+    .FullWidth {
+        grid-column: span 1;
+    }
+    .AssignmentItem {
+        grid-template-columns: 1fr;
+        gap: 0.5rem;
+    }
+}
+

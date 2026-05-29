@@ -1,0 +1,442 @@
+.Header{
+    color: var(--header);
+    font-weight: bold;
+    font-size: 2.5rem;
+}
+
+.ContentWrapper {
+    background-color: var(--wrapper);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-radius: 0.2rem;
+    box-shadow: 4px 4px 0px rgb(0, 0, 0, 25%);
+    color: var(--header);
+    container-type: inline-size;
+    min-height: 0;
+}
+
+
+.ContentContainer{
+    background-color: var(--container);
+    font-size: 1.25rem;
+    
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+    min-height: 0;
+}
+
+
+.ContentContent{
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+}
+
+.ContentHeader{
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-height: 0;
+    min-height: min-content; /* Force container to expand if content wraps */
+    height: auto;            /* Allow it to grow naturally */
+    flex-shrink: 0;
+}
+
+.ContentContentScrollable {
+    padding: 0rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 0 0 auto !important;          
+    overflow-y: auto;     
+    max-height: 100%;  
+    min-height: 0;   
+}
+
+.ContentContentScrollable::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ContentContentScrollable::-webkit-scrollbar-thumb {
+  background: var(--shadow);
+}
+
+.ContentContentScrollable::-webkit-scrollbar-track {
+  background: var(--wrapper);
+}
+
+
+.Dropdown{
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    padding: 0.2rem 0.5rem;
+    margin: 0rem 0.4rem;
+    border-radius: 0.3rem;
+}
+
+.Button{
+    background-color: var(--button);
+    border: 3px solid var(--wrapper);
+    padding: 0.5rem 0.5rem;
+    margin: 0rem 0.4rem;
+    border-radius: 0.7rem;
+    color: var(--header);
+    font-size: 1.25rem;
+    transition: 0.1s ease;
+}
+
+.Button:hover{
+    background-color: var(--container);
+    cursor: pointer;
+}
+
+.ButtonBack {
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    padding: 0.6rem 0.5rem;
+    border-radius: 0.7rem;
+    color: var(--header);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    min-height: 3rem;
+    flex-shrink: 0;
+    font-weight: bold;
+    cursor: pointer;
+}
+.ButtonBack:hover {
+    background-color: var(--container);
+}
+
+.Line{
+    border: 1px solid var(--header);
+}
+
+
+.TaskWrapper{
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    flex-shrink: 0;
+    container-type: inline-size;
+
+}
+
+.InnerWrapper{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    
+}
+
+.InfoContainer{
+    display: flex;
+    flex-direction: row;
+}
+
+.DetailedContainer{
+    display: flex;
+    flex-direction: row;
+    gap:1rem;
+}
+
+.InteractionContainer{
+    display: flex;
+    flex-direction: row;
+    justify-content:stretch;
+    gap:1rem;
+}   
+
+@container (max-width: 700px){
+    .InnerWrapper{
+        flex-direction: column;
+    }
+
+    .DetailedContainer{
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+}
+
+@container(max-width: 375px){
+    .InfoContainer{
+        flex-direction: column;
+    }
+    
+}
+
+@container(max-width: 200px){
+    .InfoContainer{
+        flex-direction: column;
+    }
+    
+    .InteractionContainer{
+        flex-direction: column;
+    }
+}
+
+.DateDisplayer{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 2rem;
+    padding: 1rem;
+    text-align: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border-radius: 0.5rem;
+}
+
+.DateNumber{
+    font-size: 3.5rem;
+    font-weight: bold;
+    line-height: 3.5rem;
+}
+
+.DateMonth{
+    font-size: 1rem;
+}
+
+.Content{
+    padding: 1rem;
+    color: var(--foreground);
+    font-size: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    
+    align-items: start;
+}
+
+.Header{
+    color: var(--header);
+    font-weight: bold;
+    font-size: 2rem;
+}
+
+
+.Clickable {
+    background-color: var(--container);
+    border: 2px solid var(--wrapper);
+    padding: 0.6rem 0.5rem;
+    border-radius: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    width: 100%;
+    transition: 0.1s ease;
+    min-height: 3rem;   /* 💡 บังคับความสูงขั้นต่ำไม่ให้ปุ่มโดนบีบจนจม */
+    flex-shrink: 0;     /* 💡 ห้ามไม่ให้วัตถุหดตัวเมื่อจอเล็กลง */
+    font-weight: bold;
+}
+
+.Clickable:hover{
+    background-color: var(--wrapper);
+    cursor: pointer;
+}
+
+.SelectWrapper{
+    flex: 1;
+    
+}
+
+.SelectWrapper:hover{
+    cursor: pointer;
+}
+
+.ButtonContainer{
+    flex: 1;
+    padding: 1rem;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-self: center;
+
+    
+
+
+    gap: 0.5rem;
+    color: var(--header);
+    
+    max-width: 250px;
+    min-width: 250px;
+    flex-shrink: 0;
+
+}
+
+.ButtonContainer > *{
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    
+}
+
+@container (max-width: 700px){
+    .ButtonContainer{
+        flex-direction: row;
+        align-items: stretch;
+        max-width: none;
+        align-self: stretch;
+        min-width: none;
+
+    }
+}
+@container (max-width: 400px){
+    .ButtonContainer{
+        flex-direction: column;
+        min-width: none;
+    }
+}
+
+.DetailContainer{
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+@container (max-width: 300px){
+    .DetailContainer{
+        display: none;
+    }
+}
+
+.Grey{
+    color: var(--greyText);
+    background-color: var(--greyBG);
+    border: 2px solid var(--greyBorder);
+}
+
+.Red{
+    color: var(--redText);
+    background-color: var(--redBG);
+    border: 2px solid var(--redBorder);
+}
+
+.Orange{
+    color: var(--orangeText);
+    background-color: var(--orangeBG);
+    border: 2px solid var(--orangeBorder);
+}
+
+.Yellow{
+    color: var(--yellowText);
+    background-color: var(--yellowBG);
+    border: 2px solid var(--yellowBorder);
+}
+
+.Green{
+    color: var(--greenText);
+    background-color: var(--greenBG);
+    border: 2px solid var(--greenBorder);
+}
+
+.DateGrey{
+    color: var(--greyText);
+    background-color: var(--greyBG);
+}
+
+.DateRed{
+    color: var(--redText);
+    background-color: var(--redBG);
+}
+
+.DateOrange{
+    color: var(--orangeText);
+    background-color: var(--orangeBG);
+}
+
+.DateYellow{
+    color: var(--yellowText);
+    background-color: var(--yellowBG);
+}
+
+.DateGreen{
+    color: var(--greenText);
+    background-color: var(--greenBG);
+}
+
+.TextArea{
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    border-radius: 0.3rem;
+}
+
+/* เพิ่ม Container แบบเลื่อนอิสระสำหรับข้อความยาวๆ */
+.ContentHeaderScrollable {
+    padding: 1.5rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.ContentHeaderScrollable::-webkit-scrollbar {
+    width: 6px;
+}
+.ContentHeaderScrollable::-webkit-scrollbar-thumb {
+    background: var(--wrapper);
+    border-radius: 10px;
+}
+
+/* สไตล์สำหรับ Dropdown แบบ Native ที่เพิ่มเข้าไปใหม่ */
+.CustomSelect {
+    background-color: var(--container);
+    border: 2px solid var(--wrapper);
+    color: var(--header);
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    width: 100%;
+    outline: none;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+.CustomSelect:focus {
+    border-color: var(--yellowBorder);
+}
+
+/* แก้ไขบัค "ปุ่มจม" (พอหน้าจอแคบหรือเลื่อนแนวนอนแล้วปุ่มหดตัว/หายไป) */
+.Clickable {
+    background-color: var(--container);
+    border: 2px solid var(--wrapper);
+    padding: 0.75rem 1rem;  /* เพิ่มพื้นที่ให้กดง่ายขึ้น */
+    border-radius: 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    transition: 0.1s ease;
+    min-height: 3.2rem;     /* ล็อคความสูงขั้นต่ำไว้ไม่ให้แฟบ */
+    max-height: none;       /* ปลดล็อคไม่ให้ถูกตัดขาด */
+    white-space: nowrap;    /* ป้องกันข้อความตกบรรทัด */
+    font-weight: bold;
+}
+
+.Clickable:hover {
+    background-color: var(--wrapper);
+    cursor: pointer;
+}
+
+/* จัดกลุ่มปุ่มด้านล่างให้ Wrap อัตโนมัติเมื่อจอแคบ ป้องกันการทะลุหรือจมหาย */
+.ActionButtonsContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap; /* ตัวแปรสำคัญ: ป้องกันปุ่มหดจนเบี้ยวหรือหลุดกรอบ */
+    width: 100%;
+    padding-top: 0.5rem;
+}

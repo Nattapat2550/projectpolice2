@@ -1,0 +1,148 @@
+.MarkDownStyling{
+    line-height: 200%;
+}
+
+.MarkDownStyling h2{
+    color: var(--header);
+    font-weight: bold;
+    font-size: 2.5rem;
+    border-bottom: 2px solid var(--wrapper); 
+    padding-bottom: 0.3em;             
+    margin-top: 24px;                  
+    margin-bottom: 16px;
+}
+
+
+.MarkDownStyling :global(.Grey),
+.MarkDownStyling :global(.Red),
+.MarkDownStyling :global(.Orange),
+.MarkDownStyling :global(.Yellow),
+.MarkDownStyling :global(.Green),
+.MarkDownStyling :global(.Button) {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 6px;       
+    font-size: 0.95rem;
+    font-weight: bold;
+    margin: 4px;
+    
+    box-shadow: 0 2px 4px rgba(0,0,0,8%); 
+}
+
+.MarkDownStyling :global(.Grey) {
+    color: var(--greyText);
+    background-color: var(--greyBG);
+    border: 2px solid var(--greyBorder);
+}
+
+.MarkDownStyling :global(.Red) {
+    color: var(--redText);
+    background-color: var(--redBG);
+    border: 2px solid var(--redBorder);
+}
+
+.MarkDownStyling :global(.Orange) {
+    color: var(--orangeText);
+    background-color: var(--orangeBG);
+    border: 2px solid var(--orangeBorder);
+}
+
+.MarkDownStyling :global(.Yellow) {
+    color: var(--yellowText);
+    background-color: var(--yellowBG);
+    border: 2px solid var(--yellowBorder);
+}
+
+.MarkDownStyling :global(.Green) {
+    color: var(--greenText);
+    background-color: var(--greenBG);
+    border: 2px solid var(--greenBorder);
+}
+
+.MarkDownStyling :global(.Button){
+    color: var(--header);
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+}
+
+.MarkDownStyling ul {
+    list-style-type: disc;    
+    padding-left: 2rem;       
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.MarkDownStyling li {
+    margin-bottom: 0.25rem;   
+}
+
+.MarkDownStyling blockquote{
+    
+    background-color: var(--container);
+    padding:0.5rem 1rem;
+    border: 2px solid var(--shadow);
+    border-radius: 0.5rem;
+    margin: 1rem 0rem;
+    margin-left: 2rem;
+}
+
+.MarkDownStyling blockquote blockquote{
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+}
+
+.MarkDownStyling strong{
+    color: var(--header);
+}
+
+.MarkDownStyling :global(.index){
+    background-color: var(--container);
+    padding:0.5rem 1rem;
+    border: 2px solid var(--shadow);
+    border-radius: 0.5rem;
+    margin: 1rem 0rem;
+    min-width: 15%;
+}
+
+.MarkDownStyling :global(.index) li{
+    color: var(--greyBG);
+    position: sticky;
+
+}
+
+.MarkDownStyling :global(.index) li :hover{
+    color: var(--foreground);
+}
+
+
+.MarkDownStyling span[id] {
+    scroll-margin-top: 24px;
+}
+
+
+.MarkDownStyling :global(.HelpImage) {
+    max-width: 100%;       /* รูปกว้างได้มากสุดเท่ากับขนาดกล่องเนื้อหา */
+    height: auto;          /* สัดส่วนรูปไม่เพี้ยน */
+    display: block;
+    margin: 1.5rem 0;      /* เว้นระยะห่างบน-ล่างให้รูปไม่ติดกับตัวอักษร */
+    border-radius: 0.5rem;    /* ลบมุมรูปให้มนโค้งดูทันสมัย */
+    border: 2px solid var(--wrapper);
+    align-self: center;
+    justify-self: center;
+}
+
+.MarkDownStyling :global(.Caption) {
+    display: block;
+    text-align: center;             /* จัดข้อความให้อยู่กึ่งกลางใต้รูป */
+    color: #6b7280;                 /* ปรับตัวอักษรเป็นสีเทา (หรือใช้ var(--greyText) ของคุณก็ได้) */
+    font-size: 0.85rem;             /* ปรับขนาดตัวอักษรให้เล็กลง */
+    margin-bottom: 1.5rem;          /* เว้นระยะห่างก่อนจะเริ่มย่อหน้าข้อความถัดไป */
+    font-style: italic;             /* (แถม) ทำเป็นตัวเอียงเพื่อให้แยกออกจากเนื้อหาปกติชัดเจน */
+}
+
+.MarkDownStyling :global(.content){
+    display: flex;
+    flex-direction: row;
+    gap: 1rem;
+    position: relative;
+}

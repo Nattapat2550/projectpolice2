@@ -1,0 +1,115 @@
+.Header{
+    color: var(--header);
+    font-weight: bold;
+    font-size: 2.5rem;
+}
+
+.ContentWrapper{
+    background-color: var(--wrapper);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-radius: 0.2rem;
+    box-shadow: 4px 4px 0px rgb(0, 0, 0,25%);
+    color: var(--header);
+    container-type: inline-size;
+    min-height: 0;
+}
+
+
+.ContentContainer{
+    background-color: var(--container);
+    font-size: 1.25rem !important;
+    
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+    min-height: 0;
+}
+
+
+.ContentContent{
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+    min-height: 0;
+}
+
+.ContentHeader{
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+    min-height: min-content; /* Force container to expand if content wraps */
+    height: auto;            /* Allow it to grow naturally */
+    flex-shrink: 0;
+}
+
+.ContentContentScrollable {
+    padding: 0rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;        
+    overflow-y: auto;     
+    max-height: 100%;  
+    min-height: 0;   
+}
+
+
+.Dropdown {
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    padding: 0.4rem 0.8rem;
+    margin: 0rem 0.4rem;
+    border-radius: 0.5rem;
+    color: var(--header);
+    outline: none;
+    cursor: pointer;
+    font-size: 1.25rem;
+
+    /* 💡 เพิ่ม 2 บรรทัดนี้เพื่อล็อคไม่ให้ช่องจมหรือแบน */
+    min-height: 3rem;
+    flex-shrink: 0;
+}
+.Dropdown:focus {
+    border-color: var(--yellowBorder);
+}
+
+.Button{
+    background-color: var(--button);
+    border: 3px solid var(--wrapper);
+    padding: 0.5rem 0.5rem;
+    margin: 0rem 0.4rem;
+    border-radius: 0.7rem;
+    color: var(--header);
+    font-size: 1.25rem;
+    transition: 0.1s ease;
+}
+
+.Button:hover{
+    background-color: var(--container);
+    cursor: pointer;
+}
+
+
+.Line{
+    border: 1px solid var(--header);
+}
+
+.ContentContentScrollable::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ContentContentScrollable::-webkit-scrollbar-track {
+  background: var(--wrapper);
+}
+
+.ContentContentScrollable::-webkit-scrollbar-thumb {
+  background-color: var(--shadow); 
+  border-radius: 10px;
+}

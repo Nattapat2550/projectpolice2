@@ -1,0 +1,156 @@
+.Header{
+    color: var(--header);
+    font-weight: bold;
+    font-size: 2.5rem;
+}
+
+
+
+.ContentWrapper{
+    background-color: var(--wrapper);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    border-radius: 0.2rem;
+    box-shadow: 4px 4px 0px rgb(0, 0, 0,25%);
+    color: var(--header);
+    container-type: inline-size;
+    min-height: 0;
+    
+}
+
+
+.ContentContainer{
+    background-color: var(--container);
+    font-size: 1.25rem;
+    
+    display: flex;
+    flex-direction: column;
+
+    flex: 1;
+    min-height: 0;
+    container-type: inline-size;
+}
+
+
+.ContentContent{
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+}
+
+
+@container (max-width:450px){
+    .ContentHeader{
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
+
+.ContentContentScrollable {
+    padding: 0rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 0 0 auto !important;          
+    overflow-y: auto;     
+    max-height: 100%;  
+    min-height: 0;   
+}
+
+.ContentContentScrollable::-webkit-scrollbar {
+  width: 5px;
+}
+
+.ContentContentScrollable::-webkit-scrollbar-track {
+  background: var(--wrapper);
+}
+
+.ContentContentScrollable::-webkit-scrollbar-thumb {
+  background-color: var(--shadow); /* ใช้สี shadow ที่คุณตั้งไว้ */
+  border-radius: 10px;
+}
+
+
+
+.Button{
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    padding: 0.2rem 0.5rem;
+    margin: 0rem 0.4rem;
+    border-radius: 0.3rem;
+    color: var(--header);
+    font-size: 1.5rem;
+    transition: 0.1s ease;
+}
+
+.Button:hover{
+    background-color: var(--container);
+    cursor: pointer;
+}
+
+
+.Line{
+    border: 1.5px solid var(--header);
+}
+
+
+.ContentHeader {
+    padding: 0.7rem 1rem;
+    display: flex;
+    flex-direction: row;
+    /* 💡 CHANGE 1: Enable wrapping on the parent so groups can drop down smoothly together */
+    flex-wrap: wrap; 
+    /* 💡 CHANGE 2: Use row and column gaps to handle spacing perfectly when wrapped */
+    column-gap: 1.5rem;
+    row-gap: 0.75rem;     
+    min-height: min-content; 
+    height: auto;            
+    flex-shrink: 0;
+    align-items: center;
+    color: var(--header) !important;
+}
+
+/* 💡 New Class: Keeps label and dropdown locked tightly as a single un-splittable block */
+.FilterGroup {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;         /* Tight spacing between label text and its dropdown */
+    flex-shrink: 0;      /* Prevents the group itself from shrinking awkwardly */
+    flex: 1;
+}
+
+@container (max-width:450px){
+    .ContentHeader {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+    }
+    
+    .FilterGroup {
+        justify-content: space-between !important; /* Keeps things neat on small phones */
+        
+    }
+}
+
+.Dropdown {
+    background-color: var(--button);
+    border: 2px solid var(--wrapper);
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.3rem;
+    width: 100%;             
+    /* 💡 CHANGE 3: Changed to min-width instead of strict max-width to ensure the box doesn't squash */
+    min-width: 130px;
+    max-width: 160px;        
+    box-sizing: border-box;  
+}
+
+@container (max-width:450px){
+    .Dropdown {
+        max-width: 70%; 
+    }
+}
+
