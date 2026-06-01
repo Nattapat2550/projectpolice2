@@ -19,7 +19,7 @@
 
 .ContentContainer{
     background-color: var(--container);
-    font-size: 1.25rem;
+    font-size: 1rem;
     
     display: flex;
     flex-direction: column;
@@ -319,8 +319,8 @@
 
 .Red{
     color: var(--redText);
-    background-color: var(--redBG);
-    border: 2px solid var(--redBorder);
+    background-color: var(--redBG)!important;
+    border: 2px solid var(--redBorder)!important;
 }
 
 .Orange{
@@ -331,14 +331,14 @@
 
 .Yellow{
     color: var(--yellowText);
-    background-color: var(--yellowBG);
-    border: 2px solid var(--yellowBorder);
+    background-color: var(--yellowBG) !important;
+    border: 2px solid var(--yellowBorder)!important;
 }
 
 .Green{
     color: var(--greenText);
-    background-color: var(--greenBG);
-    border: 2px solid var(--greenBorder);
+    background-color: var(--greenBG)!important;
+    border: 2px solid var(--greenBorder)!important;
 }
 
 .DateGrey{

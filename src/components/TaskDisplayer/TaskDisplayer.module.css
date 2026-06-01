@@ -4,8 +4,6 @@
     font-size: 2.5rem;
 }
 
-
-
 .ContentWrapper{
     background-color: var(--wrapper);
     display: flex;
@@ -16,22 +14,21 @@
     color: var(--header);
     container-type: inline-size;
     min-height: 0;
-    
+    max-width: 100%;
+    box-sizing: border-box;
 }
-
 
 .ContentContainer{
     background-color: var(--container);
-    font-size: 1.25rem;
-    
+    font-size: 1rem;
     display: flex;
     flex-direction: column;
-
     flex: 1;
     min-height: 0;
     container-type: inline-size;
+    max-width: 100%;
+    box-sizing: border-box;
 }
-
 
 .ContentContent{
     padding: 0.7rem 1rem;
@@ -39,14 +36,6 @@
     flex-direction: column;
     gap: 0.5rem;
     min-height: 0;
-}
-
-
-@container (max-width:450px){
-    .ContentHeader{
-        flex-direction: column;
-        align-items: stretch;
-    }
 }
 
 .ContentContentScrollable {
@@ -58,6 +47,8 @@
     overflow-y: auto;     
     max-height: 100%;  
     min-height: 0;   
+    max-width: 100%;
+    overflow-x: hidden;
 }
 
 .ContentContentScrollable::-webkit-scrollbar {
@@ -69,11 +60,9 @@
 }
 
 .ContentContentScrollable::-webkit-scrollbar-thumb {
-  background-color: var(--shadow); /* ใช้สี shadow ที่คุณตั้งไว้ */
+  background-color: var(--shadow); 
   border-radius: 10px;
 }
-
-
 
 .Button{
     background-color: var(--button);
@@ -84,6 +73,8 @@
     color: var(--header);
     font-size: 1.5rem;
     transition: 0.1s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .Button:hover{
@@ -91,19 +82,15 @@
     cursor: pointer;
 }
 
-
 .Line{
     border: 1.5px solid var(--header);
 }
-
 
 .ContentHeader {
     padding: 0.7rem 1rem;
     display: flex;
     flex-direction: row;
-    /* 💡 CHANGE 1: Enable wrapping on the parent so groups can drop down smoothly together */
     flex-wrap: wrap; 
-    /* 💡 CHANGE 2: Use row and column gaps to handle spacing perfectly when wrapped */
     column-gap: 1.5rem;
     row-gap: 0.75rem;     
     min-height: min-content; 
@@ -111,16 +98,24 @@
     flex-shrink: 0;
     align-items: center;
     color: var(--header) !important;
+    max-width: 100%;
+    box-sizing: border-box;
 }
 
-/* 💡 New Class: Keeps label and dropdown locked tightly as a single un-splittable block */
+/* 💡 บังคับให้ Label และ Dropdown อยู่บรรทัดเดียวกันเป็นแนวนอนเสมอ */
 .FilterGroup {
     display: flex;
-    flex-direction: row;
+    flex-direction: row !important; 
     align-items: center;
-    gap: 0.5rem;         /* Tight spacing between label text and its dropdown */
-    flex-shrink: 0;      /* Prevents the group itself from shrinking awkwardly */
-    flex: 1;
+    gap: 0.5rem;         
+    flex: 1 1 auto;
+    min-width: 0; 
+    max-width: 100%;
+}
+
+.FilterGroup label {
+    white-space: nowrap;
+    flex-shrink: 0; /* ป้องกันข้อความ "สถานะ :" โดนบีบจนตกบรรทัด */
 }
 
 @container (max-width:450px){
@@ -129,28 +124,165 @@
         align-items: stretch;
         gap: 0.75rem;
     }
-    
-    .FilterGroup {
-        justify-content: space-between !important; /* Keeps things neat on small phones */
-        
-    }
 }
 
+/* 💡 กล่อง Dropdown (สถานะ) - เป็นแท็ก <select> */
 .Dropdown {
     background-color: var(--button);
     border: 2px solid var(--wrapper);
-    padding: 0.2rem 0.5rem;
-    border-radius: 0.3rem;
+    border-radius: 4px; 
     width: 100%;             
-    /* 💡 CHANGE 3: Changed to min-width instead of strict max-width to ensure the box doesn't squash */
-    min-width: 130px;
-    max-width: 160px;        
+    min-width: 0; 
+    max-width: 240px;        
     box-sizing: border-box;  
+    flex: 1; 
+    height: 44px !important; 
+    font-size: 14px; /* บังคับขนาดตัวอักษรให้เท่ากัน */
+    
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+    color: var(--header);
+
+    /* 💡 ลบลูกศรดั้งเดิมของเบราว์เซอร์ทิ้ง เพื่อให้หน้าตาเหมือนกันทุกเครื่อง */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+
+    /* 💡 ยัดภาพลูกศร SVG ของเราเข้าไปเป็น Background แทน */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' width='20' height='20'%3E%3Cpath fill='%236b7280' d='M4.516 7.548c0.436-0.446 1.043-0.481 1.576 0l3.908 3.747 3.908-3.747c0.533-0.481 1.141-0.446 1.574 0 0.436 0.445 0.408 1.197 0 1.615-0.406 0.418-4.695 4.502-4.695 4.502-0.217 0.223-0.502 0.335-0.787 0.335s-0.57-0.112-0.789-0.335c0 0-4.287-4.084-4.695-4.502s-0.436-1.17 0-1.615z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px; /* ขนาดลูกศรเป๊ะๆ */
+
+    padding: 0 36px 0 12px; /* เว้นที่ว่างให้ลูกศรด้านขวา */
+}
+
+.Dropdown:hover, 
+.Dropdown:focus {
+    border-color: var(--blueText); 
 }
 
 @container (max-width:450px){
     .Dropdown {
-        max-width: 70%; 
+        max-width: 100%; 
     }
 }
 
+/* 💡 กล่องคลุม MultiSelect (แสดงสำหรับ) */
+.MultiSelectContainer {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+    max-width: 240px; 
+    flex: 1;
+    min-width: 0; 
+    height: 44px !important; 
+}
+
+@container (max-width:450px){
+    .MultiSelectContainer {
+        max-width: 100%; 
+    }
+}
+
+/* 💡 กล่องปุ่มกดของ MultiSelect */
+.MultiSelectTrigger {
+    height: 44px !important; 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    border: 2px solid var(--wrapper);
+    padding: 0 12px; /* ตรงกับพื้นฐานของ dropdown เป๊ะๆ */
+    border-radius: 4px;
+    background-color: var(--button);
+    color: var(--header);
+    width: 100%;
+    user-select: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.MultiSelectTrigger:hover {
+    border-color: var(--blueText); 
+}
+
+.TriggerText {
+    flex-grow: 1;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size: 14px;
+    text-align: left;
+    min-width: 0; /* 💡 สำคัญมาก: ช่วยให้ text-overflow (จุดไข่ปลา) ทำงานได้เมื่อจอแคบ */
+}
+
+.ArrowIcon {
+    font-size: 10px;
+    color: var(--foreground);
+    margin-left: 8px;
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+/* ...โค้ดส่วน Menu Dropdown คงเดิม... */
+.MultiSelectMenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background-color: var(--button);
+    border: 2px solid var(--foreground);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    max-height: 240px;
+    overflow-y: auto;
+    margin-top: 6px;
+    padding: 6px 0;
+    animation: fadeIn 0.15s ease-out;
+}
+
+.ClearAllButton {
+    padding: 8px 16px;
+    color: var(--redText);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid var(--foreground);
+    transition: background-color 0.2s;
+}
+
+.ClearAllButton:hover {
+    background-color: var(--redBG);
+}
+
+.CheckboxOption {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    color: var(--foreground);
+    font-size: 14px;
+    user-select: none;
+    transition: background-color 0.15s;
+}
+
+.CheckboxOption:hover {
+    background-color: var(--wrapper); 
+    color: var(--header);
+}
+
+.CheckboxInput {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--wrapper); 
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}

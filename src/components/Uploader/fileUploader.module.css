@@ -4,30 +4,25 @@
     font-size: 2.5rem;
 }
 
-.ContentWrapper{
+.ContentWrapper {
     background-color: var(--wrapper);
     display: flex;
     flex-direction: column;
-    flex: 1;
+    /* 💡 ลบ flex: 1, container-type และ min-height: 0 ออกเพื่อแก้บัคข้อมูลหายตอนเต็มจอ */
     border-radius: 0.2rem;
     box-shadow: 4px 4px 0px rgb(0, 0, 0,25%);
     color: var(--header);
-    container-type: inline-size;
-    min-height: 0;
+    height: auto;
 }
-
 
 .ContentContainer{
     background-color: var(--container);
     font-size: 1.25rem !important;
-    
     display: flex;
     flex-direction: column;
-
     flex: 1;
     min-height: 0;
 }
-
 
 .ContentContent{
     padding: 0.7rem 1rem;
@@ -43,9 +38,8 @@
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    min-height: 0;
-    min-height: min-content; /* Force container to expand if content wraps */
-    height: auto;            /* Allow it to grow naturally */
+    min-height: min-content; 
+    height: auto;            
     flex-shrink: 0;
 }
 
@@ -60,7 +54,6 @@
     min-height: 0;   
 }
 
-
 .Dropdown {
     background-color: var(--button);
     border: 2px solid var(--wrapper);
@@ -71,8 +64,6 @@
     outline: none;
     cursor: pointer;
     font-size: 1.25rem;
-
-    /* 💡 เพิ่ม 2 บรรทัดนี้เพื่อล็อคไม่ให้ช่องจมหรือแบน */
     min-height: 3rem;
     flex-shrink: 0;
 }
@@ -95,7 +86,6 @@
     background-color: var(--container);
     cursor: pointer;
 }
-
 
 .Line{
     border: 1px solid var(--header);

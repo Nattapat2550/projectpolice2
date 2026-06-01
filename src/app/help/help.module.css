@@ -105,7 +105,7 @@
 }
 
 .MarkDownStyling :global(.index) li{
-    color: var(--greyBG);
+    color: var(--foreground);
     position: sticky;
 
 }
@@ -134,7 +134,7 @@
 .MarkDownStyling :global(.Caption) {
     display: block;
     text-align: center;             /* จัดข้อความให้อยู่กึ่งกลางใต้รูป */
-    color: #6b7280;                 /* ปรับตัวอักษรเป็นสีเทา (หรือใช้ var(--greyText) ของคุณก็ได้) */
+    color: var(--foreground);                 /* ปรับตัวอักษรเป็นสีเทา (หรือใช้ var(--greyText) ของคุณก็ได้) */
     font-size: 0.85rem;             /* ปรับขนาดตัวอักษรให้เล็กลง */
     margin-bottom: 1.5rem;          /* เว้นระยะห่างก่อนจะเริ่มย่อหน้าข้อความถัดไป */
     font-style: italic;             /* (แถม) ทำเป็นตัวเอียงเพื่อให้แยกออกจากเนื้อหาปกติชัดเจน */

@@ -1,6 +1,29 @@
 import styles from "./Details.module.css"
 import { useState, useEffect } from "react";
 
+// ฟังก์ชันคำนวณสีตัวอักษรให้อ่านง่าย
+const getTextColor = (bgColor: string) => {
+    if (!bgColor || !bgColor.startsWith('#')) return '#1f2937'; 
+    const hex = bgColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? '#1f2937' : '#ffffff';
+};
+
+// 💡 เพิ่มฟังก์ชันแปลงข้อความ **ให้กลายเป็นตัวหนา**
+const formatText = (text: string) => {
+    if (!text) return "ไม่พบข้อความเนื้อหาในเอกสาร";
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, index) => {
+        if (part.startsWith("**") && part.endsWith("**")) {
+            return <strong key={index}>{part.slice(2, -2)}</strong>;
+        }
+        return part;
+    });
+};
+
 export default function DetailsDisplayer({ 
     taskData, 
     setTaskData, 
@@ -141,6 +164,9 @@ export default function DetailsDisplayer({
                             <h2 className={styles.Header} style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>
                                 รายละเอียดจากเอกสาร (ข้อความเต็ม)
                             </h2>
+                            <p className="text-sm text-(--foreground)/60 mb-4 font-medium flex items-center gap-2 bg-(--container) w-fit px-3 py-1.5 rounded-full border border-(--shadow)/60">
+                                👤 เพิ่มเข้าระบบโดย: <span className="font-bold text-(--blueText)">{taskData?.creatorName || "ไม่ระบุ"}</span>
+                            </p>
                             {taskData?.document_link && (
                                 <a 
                                     href={taskData.document_link} 
@@ -152,8 +178,18 @@ export default function DetailsDisplayer({
                                     📄 เปิดดูไฟล์เอกสารต้นฉบับ
                                 </a>
                             )}
-                            <div className={styles.TextArea} style={{ padding: '1rem', whiteSpace: "pre-wrap", lineHeight: "1.6", color: 'var(--header)' }}>
-                                {taskData?.main_text || "ไม่พบข้อความเนื้อหาในเอกสาร"}
+                            {/* 💡 เพิ่ม maxHeight และ overflowY เพื่อสร้าง Scrollbar */}
+                            <div className={styles.TextArea} style={{ 
+                                padding: '1rem', 
+                                whiteSpace: "pre-wrap", 
+                                lineHeight: "1.6", 
+                                color: 'var(--header)',
+                                maxHeight: '350px',
+                                overflowY: 'auto',
+                                borderRadius: '8px'
+                            }}>
+                                {/* 💡 เรียกใช้ formatText เพื่อเรนเดอร์ตัวหนา */}
+                                {taskData?.main_text ? formatText(taskData.main_text) : "ไม่พบข้อความเนื้อหาในเอกสาร"}
                             </div>
                         </div>
 
@@ -176,6 +212,10 @@ export default function DetailsDisplayer({
                         <div className="flex flex-col gap-6">
                             {taskData?.assignments?.length > 0 ? taskData.assignments.map((assign: any, index: number) => {
                                 const isAssignCompleted = assign.topics?.length > 0 && assign.topics.every((t: any) => t.is_completed);
+                                
+                                const assignedUser = users.find(u => String(u.id || u._id) === String(assign.user_id));
+                                const userColor = assignedUser?.color || '#e5e7eb';
+                                const userTextColor = getTextColor(userColor);
 
                                 return (
                                     <div key={index} className={styles.TaskWrapper} style={{ 
@@ -205,7 +245,10 @@ export default function DetailsDisplayer({
                                                         ))}
                                                     </select>
                                                 ) : (
-                                                    <span className={styles.TextArea} style={{ padding: '0.4rem 0.8rem', fontWeight: 'bold' }}>
+                                                    <span 
+                                                        className="px-3 py-1 rounded-md text-sm sm:text-base font-bold shadow-sm border border-black/10" 
+                                                        style={{ backgroundColor: userColor, color: userTextColor }}
+                                                    >
                                                         {assign.personInCharge || "ไม่ระบุ"}
                                                     </span>
                                                 )}

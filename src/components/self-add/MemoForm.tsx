@@ -3,9 +3,14 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import styles from "./SelfAdd.module.css"; 
+import Swal from "sweetalert2"; // 💡 นำเข้า SweetAlert2
 
-type Topic = { detail: string };
-type Assignment = { user_id: string; role_or_name: string; topics: Topic[] };
+// ฟังก์ชันหาเวลาอนาคตเพื่อตั้งเป็น default
+const getFutureDateStr = (daysToAdd: number) => {
+  const d = new Date();
+  d.setDate(d.getDate() + daysToAdd);
+  return d.toISOString().slice(0, 16); // return format "YYYY-MM-DDThh:mm"
+};
 
 export default function MemoForm() {
   const [users, setUsers] = useState<any[]>([]);
@@ -13,31 +18,44 @@ export default function MemoForm() {
   const [formData, setFormData] = useState({
     title: "งานติดตามคีย์ด้วยมือ",
     memo_no: "123/2567",
-    memo_date: "2026-05-26",
-    due_date: "2026-06-01T10:00",
+    memo_date: new Date().toISOString().split('T')[0], // วันนี้
+    due_date: getFutureDateStr(14), // ค่าเริ่มต้น 14 วันล่วงหน้า
     main_text: "รายละเอียดงานที่เพิ่มเข้ามาด้วยตนเอง...",
     is_urgent: true,
   });
 
-  const [assignments, setAssignments] = useState<Assignment[]>([
-    { user_id: "", role_or_name: "", topics: [{ detail: "" }] }
-  ]);
+  // ใช้ Checklist แทน Dropdown
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [userTopics, setUserTopics] = useState<Record<string, { detail: string }[]>>({});
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("token") : "";
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
-        const res = await fetch(`${backendUrl}/api/v1/users`);
+        const res = await fetch(`${backendUrl}/api/v1/users`, {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token ? { "Authorization": `Bearer ${token}` } : {})
+          }
+        });
+        
         if (res.ok) {
           const result = await res.json();
           setUsers(result.data || []); 
         }
       } catch (err) {
         console.error("Failed to fetch users");
-        setUsers([]);
       }
     };
     fetchUsers();
+
+    // ตั้งค่าคน Login เป็น Default Checklist
+    const loggedInUserId = typeof window !== 'undefined' ? localStorage.getItem("user_id") || localStorage.getItem("userId") || "" : "";
+    if (loggedInUserId) {
+        setSelectedUsers([loggedInUserId]);
+        setUserTopics({ [loggedInUserId]: [{ detail: "" }] });
+    }
   }, []);
 
   const handleMainChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -49,80 +67,123 @@ export default function MemoForm() {
     }));
   };
 
-  const addAssignment = () => {
-    setAssignments([...assignments, { user_id: "", role_or_name: "", topics: [{ detail: "" }] }]);
-  };
-
-  const removeAssignment = (index: number) => {
-    setAssignments(assignments.filter((_, i) => i !== index));
-  };
-
-  const addTopic = (assignIndex: number) => {
-    const newAssignments = [...assignments];
-    newAssignments[assignIndex].topics.push({ detail: "" });
-    setAssignments(newAssignments);
-  };
-
-  const removeTopic = (assignIndex: number, topicIndex: number) => {
-    const newAssignments = [...assignments];
-    newAssignments[assignIndex].topics = newAssignments[assignIndex].topics.filter((_, i) => i !== topicIndex);
-    setAssignments(newAssignments);
-  };
-
-  const handleTopicChange = (assignIndex: number, topicIndex: number, value: string) => {
-    const newAssignments = [...assignments];
-    newAssignments[assignIndex].topics[topicIndex].detail = value;
-    setAssignments(newAssignments);
-  };
-
-  const handleUserChange = (index: number, value: string) => {
-    const newAssignments = [...assignments];
-    if (value === "ทุกหน่วยงาน") {
-      newAssignments[index].user_id = "";
-      newAssignments[index].role_or_name = "ทุกหน่วยงาน";
-    } else {
-      newAssignments[index].user_id = value;
-      newAssignments[index].role_or_name = "";
+  // จัดการการเลือก Checkbox บุคคล
+  const handleToggleUser = (uid: string, checked: boolean) => {
+    if (uid === "all") {
+        setSelectedUsers(checked ? ["all"] : []);
+        if (checked && !userTopics["all"]) {
+            setUserTopics(prev => ({ ...prev, "all": [{ detail: "" }] }));
+        }
+        return;
     }
-    setAssignments(newAssignments);
+
+    let newSelected = [...selectedUsers].filter(id => id !== "all");
+    if (checked) {
+        newSelected.push(uid);
+        if (!userTopics[uid]) setUserTopics(prev => ({ ...prev, [uid]: [{ detail: "" }] }));
+    } else {
+        newSelected = newSelected.filter(id => id !== uid);
+    }
+    setSelectedUsers(newSelected);
+  };
+
+  const handleTopicChange = (uid: string, tIndex: number, value: string) => {
+    setUserTopics(prev => {
+        const newTopics = [...(prev[uid] || [])];
+        newTopics[tIndex] = { detail: value };
+        return { ...prev, [uid]: newTopics };
+    });
+  };
+
+  const addTopic = (uid: string) => {
+    setUserTopics(prev => ({ ...prev, [uid]: [...(prev[uid] || []), { detail: "" }] }));
+  };
+
+  const removeTopic = (uid: string, tIndex: number) => {
+    setUserTopics(prev => ({ ...prev, [uid]: prev[uid].filter((_, i) => i !== tIndex) }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formattedAssignments = assignments.map((assign) => {
-      const validTopics = assign.topics.map((t) => t.detail.trim()).filter((t) => t !== "");
-      return {
-        user_id: assign.user_id ? Number(assign.user_id) : null,
-        role_or_name: assign.role_or_name || null,
-        topics: validTopics
-      };
-    }).filter(a => (a.user_id || a.role_or_name) && a.topics.length > 0);
+    if (selectedUsers.length === 0) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'ข้อมูลไม่ครบถ้วน',
+            text: 'กรุณาเลือกผู้รับผิดชอบอย่างน้อย 1 คน',
+        });
+        return;
+    }
+
+    let formattedAssignments: any[] = [];
+    if (selectedUsers.includes("all")) {
+        formattedAssignments = users.map(u => ({
+            user_id: u.id || u._id,
+            role_or_name: u.name,
+            topics: (userTopics["all"] || []).map(t => t.detail.trim()).filter(t => t !== "")
+        }));
+    } else {
+        formattedAssignments = selectedUsers.map(uid => {
+            const u = users.find(x => String(x.id || x._id) === uid);
+            return {
+                user_id: Number(uid) || uid,
+                role_or_name: u?.name || null,
+                topics: (userTopics[uid] || []).map(t => t.detail.trim()).filter(t => t !== "")
+            };
+        });
+    }
+
+    const validAssignments = formattedAssignments;
+
+    // 💡 ดึง ID ของคนที่กำลังล็อกอินอยู่
+    const currentUserId = typeof window !== 'undefined' ? String(localStorage.getItem("user_id") || localStorage.getItem("userId") || "") : "";
 
     const payload = {
       ...formData,
       document_id: null,
       due_date: formData.due_date.length === 16 ? `${formData.due_date}:00` : formData.due_date,
-      assignments: formattedAssignments,
+      assignments: validAssignments,
+      created_by: currentUserId, // 💡 เพิ่มบรรทัดนี้: ส่ง ID ไปบันทึกลง Database
+      createdBy: currentUserId   // 💡 เพิ่มเผื่อไว้ในกรณีที่ Backend รับเป็นชื่อนี้
     };
 
     try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem("token") : "";
         const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
         const response = await fetch(`${backendUrl}/api/v1/tasks`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { 
+              "Content-Type": "application/json",
+              ...(token ? { "Authorization": `Bearer ${token}` } : {})
+            },
             body: JSON.stringify(payload),
         });
         const result = await response.json();
 
         if (response.ok && result.success) {
-            alert("บันทึกข้อมูลสำเร็จ!");
+            Swal.fire({
+                icon: 'success',
+                title: 'บันทึกข้อมูลสำเร็จ!',
+                text: 'ระบบได้เพิ่มงานเข้าระบบเรียบร้อยแล้ว',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = "/";
+            });
         } else {
-            alert("เกิดข้อผิดพลาด: " + (result.message || "Unknown error"));
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: result.message || "Unknown error",
+            });
         }
     } catch (error) {
         console.error("Error submitting form:", error);
-        alert("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ (Network Error)");
+        Swal.fire({
+            icon: 'error',
+            title: 'เชื่อมต่อล้มเหลว',
+            text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ (Network Error)',
+        });
     }
   };
 
@@ -138,104 +199,102 @@ export default function MemoForm() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-bold mb-1" style={{ color: "var(--header)" }}>หัวข้องาน (Title)</label>
-                <input type="text" name="title" value={formData.title} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none"
-style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
+                <input type="text" name="title" value={formData.title} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none" style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold mb-1" style={{ color: "var(--header)" }}>เลขที่ Memo</label>
-                  <input type="text" name="memo_no" value={formData.memo_no} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none"
-style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
+                  <input type="text" name="memo_no" value={formData.memo_no} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none" style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
                 </div>
                 <div>
                   <label className="block text-sm font-bold mb-1" style={{ color: "var(--header)" }}>วันที่ Memo</label>
-                  <input type="date" name="memo_date" value={formData.memo_date} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none"
-style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
+                  <input type="date" name="memo_date" value={formData.memo_date} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none" style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-bold mb-1" style={{ color: "var(--header)" }}>วันครบกำหนด (Due Date)</label>
-                <input type="datetime-local" name="due_date" value={formData.due_date} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none"
-style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
+                <input type="datetime-local" name="due_date" value={formData.due_date} onChange={handleMainChange} required className="mt-1 block w-full rounded-md p-2.5 outline-none" style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
               </div>
 
               <div>
                 <label className="block text-sm font-bold mb-1" style={{ color: "var(--header)" }}>รายละเอียด (Main Text)</label>
-                <textarea name="main_text" value={formData.main_text} onChange={handleMainChange} rows={4} className="mt-1 block w-full rounded-md p-2.5 outline-none"
-style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
+                <textarea name="main_text" value={formData.main_text} onChange={handleMainChange} rows={4} className="mt-1 block w-full rounded-md p-2.5 outline-none" style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--foreground)" }}/>
               </div>
 
               <div className="flex items-center gap-2 pt-2">
-                <input type="checkbox" name="is_urgent" checked={formData.is_urgent} onChange={handleMainChange} id="is_urgent" style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer', accentColor: 'var(--redText)' }} />
+                <input type="checkbox" name="is_urgent" checked={formData.is_urgent} onChange={handleMainChange} id="is_urgent" className="w-5 h-5 cursor-pointer" style={{ accentColor: 'var(--redText)' }} />
                 <label htmlFor="is_urgent" className="block text-sm font-bold cursor-pointer" style={{ color: "var(--redText)" }}>🔥 กำหนดเป็นงานเร่งด่วน (Urgent)</label>
               </div>
             </div>
 
             <hr className={styles.Line} style={{ borderColor: "var(--wrapper)", margin: "1.5rem 0" }} />
 
-            {/* ส่วนจัดสรรผู้รับผิดชอบ */}
+            {/* ส่วนจัดสรรผู้รับผิดชอบ แบบ Checklist */}
             <div>
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
-                <h2 className="text-lg font-bold" style={{ color: "var(--header)" }}>ผู้รับผิดชอบและการมอบหมายงาน</h2>
-                <button type="button" onClick={addAssignment} className="px-3 py-1.5 rounded-md text-sm font-bold transition-colors" style={{ backgroundColor: "var(--button)", color: "var(--header)", border: "1px solid var(--wrapper)" }}>
-                  + เพิ่มผู้รับผิดชอบ
-                </button>
+              <h2 className="text-lg font-bold mb-4" style={{ color: "var(--header)" }}>ผู้รับผิดชอบและการมอบหมายงาน</h2>
+              
+              <div className="p-4 rounded-xl mb-4" style={{ border: "1px solid var(--wrapper)", backgroundColor: "rgba(0,0,0,0.02)" }}>
+                 <h3 className="font-bold text-sm mb-3" style={{ color: "var(--header)" }}>เลือกผู้รับผิดชอบ (เลือกได้หลายคน)</h3>
+                 
+                 <div className="flex flex-col gap-2 max-h-48 overflow-y-auto border border-(--shadow) p-3 rounded bg-(--button)">
+                     <label className="flex items-center gap-3 cursor-pointer font-bold text-blue-600">
+                         <input type="checkbox" checked={selectedUsers.includes("all")} onChange={(e) => handleToggleUser("all", e.target.checked)} className="w-4 h-4 cursor-pointer" />
+                         ทุกหน่วยงาน (ส่วนกลาง)
+                     </label>
+                     <hr className="my-1 border-(--shadow)/60" />
+                     {users.map(u => {
+                         const uid = String(u.id || u._id);
+                         return (
+                             <label key={uid} className="flex items-center gap-3 cursor-pointer text-foreground">
+                                 <input type="checkbox" checked={selectedUsers.includes(uid)} onChange={(e) => handleToggleUser(uid, e.target.checked)} className="w-4 h-4 cursor-pointer" />
+                                 {u.name} {u.role ? `(${u.role})` : ''}
+                             </label>
+                         );
+                     })}
+                 </div>
               </div>
 
-              {assignments.map((assign, index) => (
-                <div key={index} className="p-4 rounded-xl mb-4" style={{ border: "1px solid var(--wrapper)", backgroundColor: "rgba(0,0,0,0.02)" }}>
-                  <div className="flex justify-between items-center mb-3">
-                    <label className="font-bold text-sm" style={{ color: "var(--header)" }}>บุคคล / หน่วยงานที่รับผิดชอบ ลำดับที่ {index + 1}</label>
-                    {assignments.length > 1 && (
-                      <button type="button" onClick={() => removeAssignment(index)} className="text-sm font-bold hover:underline" style={{ color: "var(--redText)" }}>
-                        ลบออก
-                      </button>
-                    )}
+              {/* ส่วนกำหนดหัวข้องานตามรายชื่อคนที่ถูก Checklist ไว้ */}
+              {selectedUsers.length > 0 && (
+                  <div className="space-y-4">
+                      <h3 className="font-bold text-md text-(--header)">กำหนดงานย่อยสำหรับผู้ที่เลือก:</h3>
+                      {(selectedUsers.includes("all") ? ["all"] : selectedUsers).map(uid => {
+                          const userName = uid === "all" ? "ทุกหน่วยงาน (ส่วนกลาง)" : users.find(u => String(u.id || u._id) === uid)?.name || "ไม่ระบุ";
+                          const topics = userTopics[uid] || [{ detail: "" }];
+                          
+                          return (
+                              <div key={uid} className="p-4 rounded-xl shadow-sm bg-(--container)" style={{ border: "1px solid var(--shadow)" }}>
+                                  <label className="font-bold text-md text-blue-700 block mb-3">
+                                      งานสำหรับ: {userName}
+                                  </label>
+                                  <div className="pl-4 border-l-2 border-blue-200">
+                                      {topics.map((topic, tIndex) => (
+                                          <div key={tIndex} className="flex gap-2 items-center mb-2">
+                                              <span className="font-bold text-(--foreground)/50 w-4">•</span>
+                                              <input 
+                                                  type="text" 
+                                                  className="rounded-md p-2 w-full outline-none focus:ring-2 focus:ring-blue-400 bg-(--button) border border-(--shadow)" 
+                                                  placeholder="ระบุรายละเอียดงานย่อย (ไม่บังคับ)..."
+                                                  value={topic.detail} 
+                                                  onChange={(e) => handleTopicChange(uid, tIndex, e.target.value)}
+                                                  /* 💡 FIX: เอา required ออก เพื่อให้เว้นช่องว่างได้โดยไม่โดนบล็อคฟอร์ม */
+                                              />
+                                              {topics.length > 1 && (
+                                                  <button type="button" className="text-red-500 font-bold px-2 hover:bg-red-50 rounded text-lg shrink-0" onClick={() => removeTopic(uid, tIndex)}>✕</button>
+                                              )}
+                                          </div>
+                                      ))}
+                                      <button type="button" className="text-xs font-bold mt-2 text-blue-600 hover:underline bg-blue-50 px-2 py-1 rounded" onClick={() => addTopic(uid)}>
+                                          + เพิ่มงานย่อย
+                                      </button>
+                                  </div>
+                              </div>
+                          );
+                      })}
                   </div>
-
-                  <select 
-                    value={assign.user_id || assign.role_or_name || ""} 
-                    onChange={(e) => handleUserChange(index, e.target.value)}
-                    className="mb-4 block w-full rounded-md p-2.5 outline-none cursor-pointer"
-                    style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)", color: "var(--header)" }}
-                    required
-                  >
-                    <option value="" disabled>-- เลือกรายชื่อผู้รับผิดชอบ --</option>
-                    <option value="ทุกหน่วยงาน" style={{ fontWeight: 'bold', color: "var(--blueText)" }}>ทุกหน่วยงาน (ส่วนกลาง)</option>
-                    {users.map(u => (
-                      <option key={u.id} value={u.id} style={{ color: "var(--header)" }}>{u.name}</option>
-                    ))}
-                  </select>
-
-                  <div className="pl-4" style={{ borderLeft: "2px solid var(--wrapper)" }}>
-                    <label className="block text-xs font-bold uppercase tracking-wider mb-2" style={{ color: "var(--header)", opacity: 0.8 }}>งานย่อยที่มอบหมาย :</label>
-                    
-                    {assign.topics.map((topic, tIndex) => (
-                      <div key={tIndex} className="flex gap-2 items-center mb-2">
-                        <span className="font-bold" style={{ color: "var(--wrapper)" }}>•</span>
-                        <input 
-                          type="text" 
-                          className="rounded-md p-2 w-full outline-none" 
-                          style={{ border: "1px solid var(--wrapper)", backgroundColor: "var(--button)" }}
-                          placeholder="ระบุรายละเอียดงานย่อย..."
-                          value={topic.detail} 
-                          onChange={(e) => handleTopicChange(index, tIndex, e.target.value)}
-                          required
-                        />
-                        {assign.topics.length > 1 && (
-                          <button type="button" className="font-bold px-2 transition-colors" style={{ color: "var(--wrapper)" }} onMouseEnter={(e) => e.currentTarget.style.color = "var(--redText)"} onMouseLeave={(e) => e.currentTarget.style.color = "var(--wrapper)"} onClick={() => removeTopic(index, tIndex)}>✕</button>
-                        )}
-                      </div>
-                    ))}
-                    
-                    <button type="button" className="text-xs font-bold mt-1 hover:underline inline-block" style={{ color: "var(--blueText)" }} onClick={() => addTopic(index)}>
-                      + เพิ่มงานย่อย
-                    </button>
-                  </div>
-                </div>
-              ))}
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 w-full pt-4" style={{ borderTop: '1px solid var(--wrapper)' }}>

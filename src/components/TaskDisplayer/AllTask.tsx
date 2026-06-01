@@ -1,9 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import TaskDisplayer from "./TaskDisplayer";
 import styles from "./TaskDisplayer.module.css";
 import Link from "next/link";
+import PersonMultiSelect from "./PersonMultiSelect";
+import StatusMultiSelect from "./StatusMultiSelect"; // 👈 Import new component
 
 type TaskStatus = "following" | "problem" | "completed";
 
@@ -15,9 +17,10 @@ export default function AllTask() {
 
     const [tasks, setTasks] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [personFilter, setPersonFilter] = useState("all");
+    
+    // 💡 Changed from string "all" to string[] for multi-select
+    const [statusFilter, setStatusFilter] = useState<string[]>([]); 
+    const [personFilter, setPersonFilter] = useState<string[]>([]); 
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -41,6 +44,19 @@ export default function AllTask() {
         fetchTasks();
     }, []);
 
+    useEffect(() => {
+        const handleTaskSync = (event: Event) => {
+            const customEvent = event as CustomEvent<{ id: string; status: string }>;
+            const { id, status } = customEvent.detail;
+            setTasks((prevTasks) =>
+                prevTasks.map((task) => task.id === id ? { ...task, status } : task)
+            );
+        };
+
+        window.addEventListener("taskStatusSync", handleTaskSync);
+        return () => window.removeEventListener("taskStatusSync", handleTaskSync);
+    }, []);
+
     const handleStatusChange = async (id: string, newStatus: TaskStatus) => {
         try {
             const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
@@ -54,6 +70,12 @@ export default function AllTask() {
             
             setTasks((prevTasks) =>
                 prevTasks.map((task) => task.id === id ? { ...task, status: newStatus } : task)
+            );
+
+            window.dispatchEvent(
+                new CustomEvent("taskStatusSync", {
+                    detail: { id, status: newStatus },
+                })
             );
         } catch (error) {
             console.error("Failed to update task", error);
@@ -69,32 +91,49 @@ export default function AllTask() {
 
     const filteredTasks = tasks
     .filter((task) => {
-        // 1. กรองงานที่เป็น "completed" ออกไปทันที
-        if (task.status === "completed") return false;
+        // 💡 Updated to support multi-status arrays
+        const matchStatus = statusFilter.length === 0 || statusFilter.includes(task.status);
+        
+        const taskPersons = task.personInCharge 
+            ? task.personInCharge.split(',').map((s: string) => s.trim()) 
+            : [];
 
-        // 2. เช็ค Status Filter ปกติ (เช่น "todo", "in_progress")
-        const matchStatus = statusFilter === "all" || task.status === statusFilter;
-
-        // 💡 แก้ไข 3: ถ้างานนี้มอบหมายให้ "ทุกหน่วยงาน" ทุกคนจะต้องมองเห็นแม้อยู่ใน Filter ตัวเอง
         const matchPerson =
-            personFilter === "all" ||
-            (task.personInCharge && task.personInCharge.includes("ทุกหน่วยงาน")) ||
-            (task.personInCharge && task.personInCharge.split(',').map((s: string) => s.trim()).includes(personFilter));
+            personFilter.length === 0 || 
+            taskPersons.includes("ทุกหน่วยงาน") ||
+            taskPersons.some((p:string) => personFilter.includes(p)); 
 
         return matchStatus && matchPerson;
     })
     .sort((a, b) => {
-        // เรียงลำดับตามวันที่จากเก่าไปใหม่ (เนื่องจากไม่มีสถานะ completed มาปนแล้ว)
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
+        const isACompleted = a.status === "completed" || a.status === "เสร็จสิ้น";
+        const isBCompleted = b.status === "completed" || b.status === "เสร็จสิ้น";
+
+        if (isACompleted !== isBCompleted) {
+            return isACompleted ? 1 : -1;
+        }
+
+        const parseTaskDate = (dateStr: string) => {
+            if (!dateStr) return 0;
+            const parts = dateStr.split('-');
+            let year = parseInt(parts[0], 10);
+            if (year > 2400) year = year - 543;
+            
+            const normalizedDateStr = `${year}-${parts[1]}-${parts[2]}`;
+            const time = new Date(normalizedDateStr).getTime();
+            return isNaN(time) ? 0 : time;
+        };
+
+        const dateA = parseTaskDate(a.date);
+        const dateB = parseTaskDate(b.date);
+        
         return dateA - dateB;
     });
-    
+
     return (
-        <div className="flex flex-col w-full h-full gap-6 min-h-75">
+        <div className="flex flex-col w-full h-full gap-6 min-h-[75vh]">
             <div className="flex flex-col sm:flex-row justify-between gap-4">
                 <h1 className={styles.Header}>งานติดตามทั้งหมด</h1>
-                {/* 💡 แก้ไข: เพิ่มพื้นที่กด (minHeight) ให้ผ่านเกณฑ์ทัชสกรีน และเพิ่ม aria-label */}
                 <Link 
                     href={'/addFile'} 
                     aria-label="ไปหน้าเพิ่มงานติดตามใหม่" 
@@ -103,9 +142,9 @@ export default function AllTask() {
                         display: 'inline-flex', 
                         alignItems: 'center', 
                         justifyContent: 'center', 
-                        minHeight: '48px', /* บังคับความสูงให้ผ่านเกณฑ์ 100% */
+                        minHeight: '48px', 
                         padding: '0 24px',
-                        margin: '4px 0', /* เพิ่มระยะห่างกันนิ้วเบียด */
+                        margin: '4px 0', 
                         textDecoration: 'none'
                     }}
                 >
@@ -116,45 +155,23 @@ export default function AllTask() {
             <div className={styles.ContentWrapper}>
                 <div className={styles.ContentContainer}>
                     <div className={styles.ContentHeader}>
-                        {/* Group 1: สถานะ */}
-                        <div className={styles.FilterGroup}>
-                            <strong>สถานะ:</strong>
-                            <select 
-                                className={styles.Dropdown}
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                aria-label="ตัวกรองสถานะงาน"
-                                style={{ minHeight: '44px' }}
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                <option value="following">กำลังติดตาม</option>
-                                <option value="problem">เกิดปัญหา</option>
-                                <option value="completed">เสร็จสิ้น</option>
-                            </select>
-                        </div>
+                        
+                        {/* 💡 Replaced raw HTML select with our Custom Status Component */}
+                        <StatusMultiSelect 
+                            statusFilter={statusFilter}
+                            setStatusFilter={setStatusFilter}
+                        />
 
-                        {/* Group 2: สำหรับ */}
-                        <div className={styles.FilterGroup}>
-                            <strong>สำหรับ:</strong>
-                            <select 
-                                className={styles.Dropdown}
-                                value={personFilter}
-                                onChange={(e) => setPersonFilter(e.target.value)}
-                                aria-label="ตัวกรองผู้รับผิดชอบ"
-                                style={{ minHeight: '44px' }}
-                            >
-                                <option value="all">ทุกคน</option>
-                                {uniquePersons.map((person: any, idx) => (
-                                    <option key={idx} value={person}>{person}</option>
-                                ))}
-                            </select>
-                        </div>
-                    
+                        <PersonMultiSelect 
+                            uniquePersons={uniquePersons}
+                            personFilter={personFilter}
+                            setPersonFilter={setPersonFilter}
+                        />
                     </div>
                     <hr className={styles.Line} />
                     
                     {isLoading ? (
-                        <div className="flex items-center justify-center w-full text-gray-500 font-bold" style={{ minHeight: '500px' }}>
+                        <div className="flex items-center justify-center w-full text-(--foreground)/60 font-bold" style={{ minHeight: '500px' }}>
                             กำลังโหลดข้อมูล...
                         </div>
                     ) : (

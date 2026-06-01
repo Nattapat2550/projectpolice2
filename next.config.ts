@@ -1,11 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // 💡 เปิดระบบบีบอัด Gzip/Brotli อัตโนมัติ (ช่วยลดเวลาตอบสนองเครือข่าย)
   compress: true, 
+
+  // 💡 ปรับแต่งการโหลด Image ให้รองรับฟอร์แมตใหม่ๆ
   images: {
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60, 
   },
+
   async headers() {
     return [
       {
@@ -22,6 +26,10 @@ const nextConfig: NextConfig = {
           {
             key: "X-Frame-Options",
             value: "DENY", 
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://projectpolice-1.onrender.com https://projectpolice.onrender.com http://localhost:5003;"
           },
         ],
       },

@@ -57,12 +57,12 @@ export default function BackendWakeupLoader({ children }: { children: React.Reac
 
     // หน้าจอโหลดขณะรอเซิร์ฟเวอร์ Render ตื่น
     return (
-        <div className="flex flex-col items-center justify-center w-full h-full min-h-[70vh] bg-white text-gray-800">
-            <div className="w-16 h-16 border-4 border-gray-200 border-t-[#3F1818] rounded-full animate-spin mb-6"></div>
+        <div className="flex flex-col items-center justify-center w-full h-full min-h-[70vh] bg-background text-foreground">
+            <div className="w-16 h-16 border-4 border-(--shadow) border-t-[#3F1818] rounded-full animate-spin mb-6"></div>
             
             <h2 className="text-2xl font-bold mb-2 text-black">กำลังเชื่อมต่อฐานข้อมูล... 🚀</h2>
             
-            <p className="text-gray-500 text-center max-w-lg px-4 text-sm leading-relaxed">
+            <p className="text-(--foreground)/60 text-center max-w-lg px-4 text-sm leading-relaxed">
                 เนื่องจากระบบ Backend อยู่ในโหมดพักการทำงานเพื่อประหยัดพลังงาน <br className="hidden sm:block" />
                 <strong>การเปิดระบบครั้งแรกอาจใช้เวลาประมาณ 30 - 50 วินาที </strong> <br />
                 กรุณารอสักครู่ ระบบกำลังดึงข้อมูลงานล่าสุดให้คุณครับ...

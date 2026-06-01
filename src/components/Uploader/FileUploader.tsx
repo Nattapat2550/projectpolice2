@@ -58,8 +58,14 @@ export default function FileUploader({ setExtractedData, progress, setProgress }
         try {
             const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
             
+            // ดึง Token จาก LocalStorage (หรือที่ที่คุณเก็บไว้)
+            const token = localStorage.getItem("token"); 
+
             const response = await axios.post(`${backendUrl}/api/v1/documents/process`, formData, {
-                headers: { "Content-Type": "multipart/form-data" },
+                headers: { 
+                    "Content-Type": "multipart/form-data",
+                    "Authorization": `Bearer ${token}` // เพิ่ม Token ตรงนี้
+                },
                 onUploadProgress: (progressEvent) => {
                     if (progressEvent.total) {
                         const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
@@ -114,9 +120,9 @@ export default function FileUploader({ setExtractedData, progress, setProgress }
                     {files.length === 0 ? (
                         <div>อัพโหลดหรือลากไฟล์เอกสารมาที่นี่</div>
                     ) : (
-                        <ul className="flex flex-col gap-2 w-full max-w-sm px-4 text-sm text-gray-700">
+                        <ul className="flex flex-col gap-2 w-full max-w-sm px-4 text-sm text-foreground">
                             {files.map((file, index) => (
-                                <li key={index} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                                <li key={index} className="flex justify-between items-center bg-(--wrapper) p-2 rounded">
                                     <span className="truncate pr-4">{file.name}</span>
                                     <button 
                                         onClick={(e) => { e.stopPropagation(); removeFile(index); }}
@@ -138,7 +144,7 @@ export default function FileUploader({ setExtractedData, progress, setProgress }
             )}
 
             {progress > 0 && progress < 100 && (
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="w-full bg-(--wrapper) rounded-full h-2.5">
                     <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
                 </div>
             )}

@@ -3,19 +3,30 @@
 import { useState, useEffect } from "react";
 import TaskDisplayer from "./TaskDisplayer";
 import styles from "./TaskDisplayer.module.css";
+import PersonMultiSelect from "./PersonMultiSelect";
+import StatusMultiSelect from "./StatusMultiSelect"; // 👈 Imported the multi-select component
 
 type TaskStatus = "following" | "problem" | "completed";
 
 export default function UrgentTask() {
     const initialTaskData = [
-        { id: "0", name: "ชื่องานด่วนมาก", personInCharge: "นี้เป็นขอมูลทดสอบ", date: "2026-05-21", status: "following" },
+        { 
+            id: "0", 
+            name: "ชื่องานด่วนมาก", 
+            personInCharge: "ผู้ดูแลระบบ", 
+            date: "2026-05-21", 
+            status: "following",
+            createdAt: new Date().toISOString(),
+            assigneesData: [{ name: "ผู้ดูแลระบบ", color: "#fca5a5" }] 
+        },
     ];
 
     const [tasks, setTasks] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [personFilter, setPersonFilter] = useState("all");
+    
+    // 💡 Changed from string "all" to string[] to support multi-select status filtering
+    const [statusFilter, setStatusFilter] = useState<string[]>([]); 
+    const [personFilter, setPersonFilter] = useState<string[]>([]); 
 
     useEffect(() => {
         const fetchUrgentTasks = async () => {
@@ -39,6 +50,19 @@ export default function UrgentTask() {
         fetchUrgentTasks();
     }, []);
 
+    useEffect(() => {
+        const handleTaskSync = (event: Event) => {
+            const customEvent = event as CustomEvent<{ id: string; status: string }>;
+            const { id, status } = customEvent.detail;
+            setTasks((prevTasks) =>
+                prevTasks.map((task) => task.id === id ? { ...task, status } : task)
+            );
+        };
+
+        window.addEventListener("taskStatusSync", handleTaskSync);
+        return () => window.removeEventListener("taskStatusSync", handleTaskSync);
+    }, []);
+
     const handleStatusChange = async (id: string, newStatus: TaskStatus) => {
         try {
             const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
@@ -53,13 +77,18 @@ export default function UrgentTask() {
             setTasks((prevTasks) =>
                 prevTasks.map((task) => task.id === id ? { ...task, status: newStatus } : task)
             );
+
+            window.dispatchEvent(
+                new CustomEvent("taskStatusSync", {
+                    detail: { id, status: newStatus },
+                })
+            );
         } catch (error) {
             console.error("Failed to update task", error);
             alert("เกิดข้อผิดพลาด ไม่สามารถอัปเดตสถานะได้");
         }
     };
 
-    // 💡 แก้ไข 1: แยกชื่อที่ติดกันด้วยลูกน้ำออก เพื่อให้ Dropdown แสดงเป็นรายบุคคล
     const allPersons = tasks.flatMap(t => {
         if (!t.personInCharge) return [];
         return t.personInCharge.split(',').map((s: string) => s.trim()).filter(Boolean);
@@ -67,71 +96,65 @@ export default function UrgentTask() {
     const uniquePersons = Array.from(new Set(allPersons));
 
     const filteredTasks = tasks.filter((task) => {
-        if (task.status === "completed") return false; // กรองงานที่ completed ออกก่อน
-        const matchStatus = statusFilter === "all" || task.status === statusFilter;
+        // 💡 Updated to evaluate whether the task's status exists within the filter array
+        const matchStatus = statusFilter.length === 0 || statusFilter.includes(task.status);
         
-        // 💡 แก้ไข 3: ถ้างานนี้มอบหมายให้ "ทุกหน่วยงาน" ทุกคนจะต้องมองเห็นแม้อยู่ใน Filter ตัวเอง
+        const taskPersons = task.personInCharge 
+            ? task.personInCharge.split(',').map((s: string) => s.trim()) 
+            : [];
+
         const matchPerson =
-            personFilter === "all" ||
-            (task.personInCharge && task.personInCharge.includes("ทุกหน่วยงาน")) ||
-            (task.personInCharge && task.personInCharge.split(',').map((s: string) => s.trim()).includes(personFilter));
+            personFilter.length === 0 || 
+            taskPersons.includes("ทุกหน่วยงาน") ||
+            taskPersons.some((p: string) => personFilter.includes(p)); 
 
         return matchStatus && matchPerson;
     }).sort((a, b) => {
-        // 💡 แก้ไข 2: จัดเรียงงานที่ completed ไปไว้ท้ายสุด และเรียงตามวันที่ใกล้กำหนดส่ง
         if (a.status === "completed" && b.status !== "completed") return 1;
         if (a.status !== "completed" && b.status === "completed") return -1;
         
-        const dateA = new Date(a.date).getTime();
-        const dateB = new Date(b.date).getTime();
+        const parseTaskDate = (dateStr: string) => {
+            if (!dateStr) return 0;
+            const parts = dateStr.split('-');
+            let year = parseInt(parts[0], 10);
+            
+            if (year > 2400) {
+                year = year - 543;
+            }
+            
+            const normalizedDateStr = `${year}-${parts[1]}-${parts[2]}`;
+            const time = new Date(normalizedDateStr).getTime();
+            return isNaN(time) ? 0 : time;
+        };
+
+        const dateA = parseTaskDate(a.date);
+        const dateB = parseTaskDate(b.date);
         return dateA - dateB;
     });
 
     return (
-        <div className="flex flex-col w-full h-full gap-6 min-h-75">
+        <div className="flex flex-col w-full h-full gap-6 min-h-[75vh]">
             <h1 className={styles.Header}>งานติดตามเร่งด่วน</h1>
             <div className={styles.ContentWrapper}>
                 <div className={styles.ContentContainer}>
                     <div className={styles.ContentHeader}>
-                        {/* Group 1: สถานะ */}
-                        <div className={styles.FilterGroup}>
-                            <strong>สถานะ:</strong>
-                            <select 
-                                className={styles.Dropdown}
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                aria-label="ตัวกรองสถานะงาน"
-                                style={{ minHeight: '44px' }}
-                            >
-                                <option value="all">ทั้งหมด</option>
-                                <option value="following">กำลังติดตาม</option>
-                                <option value="problem">เกิดปัญหา</option>
-                                <option value="completed">เสร็จสิ้น</option>
-                            </select>
-                        </div>
+                        
+                        {/* 💡 Replaced legacy dropdown with custom multi-select selector */}
+                        <StatusMultiSelect 
+                            statusFilter={statusFilter}
+                            setStatusFilter={setStatusFilter}
+                        />
 
-                        {/* Group 2: สำหรับ */}
-                        <div className={styles.FilterGroup}>
-                            <strong>สำหรับ:</strong>
-                            <select 
-                                className={styles.Dropdown}
-                                value={personFilter}
-                                onChange={(e) => setPersonFilter(e.target.value)}
-                                aria-label="ตัวกรองผู้รับผิดชอบ"
-                                style={{ minHeight: '44px' }}
-                            >
-                                <option value="all">ทุกคน</option>
-                                {uniquePersons.map((person: any, idx) => (
-                                    <option key={idx} value={person}>{person}</option>
-                                ))}
-                            </select>
-                        </div>
-                    
+                        <PersonMultiSelect 
+                            uniquePersons={uniquePersons}
+                            personFilter={personFilter}
+                            setPersonFilter={setPersonFilter}
+                        />
                     </div>
                     <hr className={styles.Line}></hr>
                     
                     {isLoading ? (
-                        <div className="flex items-center justify-center w-full text-gray-500 font-bold" style={{ minHeight: '500px' }}>
+                        <div className="flex items-center justify-center w-full text-(--foreground)/60 font-bold" style={{ minHeight: '500px' }}>
                             กำลังโหลดข้อมูล...
                         </div>
                     ) : (

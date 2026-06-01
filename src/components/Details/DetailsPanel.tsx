@@ -170,7 +170,7 @@ export default function DetailsPanel({
                                                 {/* แสดงป้ายความเร่งด่วน */}
                                                 {taskData?.isUrgent && (
                                                     <p className="flex flex-row text-sm mt-1">
-                                                        <span style={{ fontWeight: 'bold', color: 'white', backgroundColor: 'var(--redText)', padding: '0.1rem 0.6rem', borderRadius: '0.4rem' }}>
+                                                        <span style={{ fontWeight: 'bold', color: 'var(--redText)', backgroundColor: 'var(--redBG)', padding: '0.1rem 0.6rem', borderRadius: '0.4rem' }}>
                                                             🔥 งานเร่งด่วน
                                                         </span>
                                                     </p>

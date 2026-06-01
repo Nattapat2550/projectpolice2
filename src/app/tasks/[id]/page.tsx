@@ -4,6 +4,7 @@ import DetailsDisplayer from "@/components/Details/DetailsDisplayer";
 import DetailsPanel from "@/components/Details/DetailsPanel";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2"; // 💡 นำเข้า SweetAlert2
 
 type TaskStatus = "following" | "problem" | "completed";
 
@@ -37,14 +38,33 @@ export default function TaskPage() {
 
     const handleStatusChange = async (taskId: string, newStatus: TaskStatus) => {
         try {
-            await fetch(`${backendUrl}/api/v1/tasks/${taskId}/status`, {
+            const res = await fetch(`${backendUrl}/api/v1/tasks/${taskId}/status`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: newStatus }),
             });
-            setTaskData((prev: any) => ({ ...prev, status: newStatus }));
+            
+            if (res.ok) {
+                setTaskData((prev: any) => ({ ...prev, status: newStatus }));
+                
+                // 💡 แสดง Notification แบบ Toast (Popup เล็กๆ มุมขวาบน) เมื่อเปลี่ยนสถานะ
+                Swal.fire({
+                    icon: 'success',
+                    title: 'อัปเดตสถานะสำเร็จ',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                });
+            }
         } catch (error) {
             console.error("Error updating status:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถอัปเดตสถานะได้',
+            });
         }
     };
 
@@ -58,33 +78,68 @@ export default function TaskPage() {
                     date: taskData.date,
                     notes: taskData.notes,
                     assignments: taskData.assignments,
-                    isUrgent: taskData.isUrgent // เพิ่มการส่งค่าความเร่งด่วนไปยัง Backend
+                    isUrgent: taskData.isUrgent // ส่งค่าความเร่งด่วนไปยัง Backend
                 }),
             });
             const data = await res.json();
             if (data.success) {
-                alert("แก้ไขข้อมูลสำเร็จ");
+                // 💡 เปลี่ยนจาก alert ธรรมดา เป็น Swal
+                Swal.fire({
+                    icon: 'success',
+                    title: 'บันทึกข้อมูลสำเร็จ!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
                 setIsEditing(false);
                 fetchTask(); // ดึงข้อมูลล่าสุดมาอัปเดตหน้าจออีกครั้ง
             }
         } catch (error) {
             console.error("Error updating task:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถบันทึกข้อมูลได้',
+            });
         }
     };
 
     const handleDeleteTask = async () => {
-        if (!confirm("คุณแน่ใจหรือไม่ว่าต้องการลบงานนี้?")) return;
+        // 💡 เปลี่ยนจาก confirm ธรรมดา เป็น Swal เพื่อความสวยงามและป้องกันการกดผิด
+        const result = await Swal.fire({
+            title: 'คุณแน่ใจหรือไม่?',
+            text: "หากลบแล้วจะไม่สามารถกู้คืนงานนี้ได้!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'ใช่, ลบเลย!',
+            cancelButtonText: 'ยกเลิก'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             const res = await fetch(`${backendUrl}/api/v1/tasks/${id}`, {
                 method: "DELETE"
             });
             const data = await res.json();
             if (data.success) {
-                alert("ลบงานสำเร็จ");
-                router.push("/"); 
+                Swal.fire({
+                    icon: 'success',
+                    title: 'ลบงานสำเร็จ',
+                    showConfirmButton: false,
+                    timer: 1500
+                }).then(() => {
+                    router.push("/"); 
+                });
             }
         } catch (error) {
             console.error("Error deleting task:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถลบงานได้',
+            });
         }
     };
 
