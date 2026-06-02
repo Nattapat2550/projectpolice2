@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
-import Swal from 'sweetalert2'; // 💡 นำเข้า SweetAlert2
+import Swal from 'sweetalert2';
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
@@ -26,13 +26,15 @@ const LoginPage = () => {
             const data = await response.json();
 
             if (response.ok) {
-                document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict; Secure`;
+                // 💡 นำ Secure ออกเวลาเทสต์บน Localhost เพื่อให้ Cookie ทำงานได้บน HTTP
+                const isSecure = window.location.protocol === 'https:' ? 'Secure;' : '';
+                document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict; ${isSecure}`;
                 
-                // 💡 บันทึกข้อมูลลง LocalStorage เพื่อให้หน้าอื่นๆ (เช่น Uploaded.tsx) ดึงไปใช้ได้
+                // 💡 บันทึกข้อมูลลง LocalStorage เพิ่ม user_name เผื่อให้ TopBar ดึงไปโชว์ได้ทันที
                 localStorage.setItem("user_id", data.user.id);
-                localStorage.setItem("token", data.token); // เซฟ token ไว้เผื่อแนบไปกับ axios ตอนอัพโหลดไฟล์
+                localStorage.setItem("user_name", data.user.name); 
+                localStorage.setItem("token", data.token); 
 
-                // 💡 เพิ่มการแจ้งเตือนเมื่อเข้าสู่ระบบสำเร็จ
                 await Swal.fire({
                     icon: 'success',
                     title: 'เข้าสู่ระบบสำเร็จ!',
@@ -43,30 +45,27 @@ const LoginPage = () => {
                 // ใช้ window.location.href เพื่อบังคับโหลดหน้าใหม่ทั้งหมด
                 window.location.href = '/';
             } else {
-                // 💡 เปลี่ยนจาก alert เป็น Swal
                 Swal.fire({
                     icon: 'error',
                     title: 'เข้าสู่ระบบไม่สำเร็จ',
                     text: data.msg || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
                 });
-                setLoading(false); // ปิดโหลดเมื่อล้มเหลว
+                setLoading(false);
             }
         } catch (error) {
             console.error('Error logging in:', error);
-            // 💡 เปลี่ยนจาก alert เป็น Swal
             Swal.fire({
                 icon: 'error',
                 title: 'เกิดข้อผิดพลาด',
                 text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
             });
-            setLoading(false); // ปิดโหลดเมื่อมี Error
+            setLoading(false);
         }
     };
 
     return (
         <div className="h-full w-full flex items-center justify-center bg-background overflow-hidden p-4">
             
-            {/* Card Container */}
             <div className="w-full max-w-md bg-(--container) p-8 rounded-2xl flex flex-col gap-2 border-2 border-(--shadow) transition-all">
                 
                 <div className="text-center mb-8">
@@ -75,7 +74,6 @@ const LoginPage = () => {
                 </div>
 
                 <form onSubmit={handleLogin} className="space-y-6">
-                    {/* Username Field */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-foreground flex items-center gap-2">
                             <User size={16} /> ชื่อผู้ใช้งาน
@@ -90,7 +88,6 @@ const LoginPage = () => {
                         />
                     </div>
 
-                    {/* Password Field */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-foreground flex items-center gap-2">
                             <Lock size={16} /> รหัสผ่าน
@@ -114,7 +111,6 @@ const LoginPage = () => {
                         </div>
                     </div>
 
-                    {/* Login Button */}
                     <button
                         type="submit"
                         disabled={loading}

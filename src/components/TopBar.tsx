@@ -10,17 +10,34 @@ export default function TopBar() {
     const [user, setUser] = useState<{ id: string; name: string; color?: string } | null>(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
+    
+    // 💡 เพิ่ม backendUrl แบบเดียวกับหน้า Login
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5003';
+
     // เช็คสถานะ Login
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                // 💡 อ่าน token จาก localStorage เป็นอันดับแรก หรืออ่านจาก cookie
+                const localToken = localStorage.getItem('token');
+                const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                const token = localToken || cookieToken;
+
+                // 💡 ถ้าใน localStorage มีชื่ออยู่ เอามาใช้ชั่วคราวก่อนเพื่อไม่ให้ UI กระตุก
+                const localId = localStorage.getItem('user_id');
+                const localName = localStorage.getItem('user_name');
+                if (localId && localName && !user) {
+                    setUser({ id: localId, name: localName });
+                }
+
                 if (!token) return;
 
-                const res = await fetch(`/api/v1/auth/me`, {
+                // 💡 เติม backendUrl เข้าไปที่ path ของ API
+                const res = await fetch(`${backendUrl}/api/v1/auth/me`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
+                
                 if (data.success) {
                     setUser(data.data);
                 }
@@ -44,15 +61,26 @@ export default function TopBar() {
 
     const handleLogout = async () => {
         try {
-            const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-            await fetch(`/api/v1/auth/logout`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            setUser(null);
-            window.location.href = '/login';
+            const localToken = localStorage.getItem('token');
+            const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+            const token = localToken || cookieToken;
+            
+            if (token) {
+                // 💡 เติม backendUrl เข้าไปตอนเรียก API เคลียร์ session
+                await fetch(`${backendUrl}/api/v1/auth/logout`, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+            }
         } catch (err) {
             console.error("Logout error", err);
+        } finally {
+            // 💡 เคลียร์ข้อมูลทั้งหมดให้เกลี้ยง
+            document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            localStorage.removeItem('token');
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('user_name');
+            setUser(null);
+            window.location.href = '/login';
         }
     };
 
@@ -62,8 +90,6 @@ export default function TopBar() {
         className="flex justify-between items-center w-full px-4 sm:px-6 py-3 sm:py-4 shadow-md z-50 relative gap-2"
         style={{ backgroundColor: 'var(--header-bg)' }}
         >
-            {/* ฝั่งซ้าย: โลโก้และชื่อระบบ */}
-            {/* 💡 เพิ่ม min-w-0 และ flex-1 เพื่อให้ชื่อระบบหดตัวได้ */}
             <Link href="/" aria-label="กลับหน้าหลัก ระบบติดตามงานมอบหมาย" className="shrink min-w-0 flex-1">
                 <div className="flex items-center gap-2 sm:gap-4 group min-w-0">
                     <Image 
@@ -74,14 +100,12 @@ export default function TopBar() {
                         className="transition-transform group-hover:scale-110 w-8 h-8 sm:w-10 sm:h-10 shrink-0" 
                         priority
                     />
-                    {/* 💡 เอา hidden ออก เพื่อให้ชื่อแสดงเสมอ และถ้าจอยาวไม่พอจะกลายเป็น ... แทน */}
                     <strong className="text-sm sm:text-lg lg:text-xl font-bold truncate text-white block">
                         ระบบติดตามงานมอบหมาย
                     </strong>
                 </div>
             </Link>
 
-            {/* ฝั่งขวา: ปุ่มตั้งค่าและผู้ใช้ */}
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <DarkModeBtn />
 
@@ -92,7 +116,6 @@ export default function TopBar() {
                     </button>
                 </Link>
 
-                {/* Authentication Section */}
                 {user ? (
                     <div className="relative" ref={dropdownRef}>
                         <button 
@@ -106,13 +129,11 @@ export default function TopBar() {
                                 height={24} 
                                 className="rounded-full object-cover w-6 h-6 shrink-0"
                             />
-                            {/* 💡 เอา hidden ออก เพื่อให้ชื่อ User แสดงในมือถือด้วย */}
                             <span className="font-medium text-foreground! truncate text-sm sm:text-base block">
                                 {user.name}
                             </span>
                         </button>
 
-                        {/* Dropdown Menu */}
                         {dropdownOpen && (
                             <div className="absolute right-0 mt-2 w-48 bg-(--container) border border-(--shadow) rounded-xl shadow-lg py-2 flex flex-col overflow-hidden">
                                 <div className="flex items-center gap-2 px-4 py-2 border-b border-(--shadow) bg-(--button)/40">
