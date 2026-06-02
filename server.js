@@ -71,7 +71,7 @@ app.prepare().then(() => {
         version: "1.0.0",
         description: "API for managing dentist appointments, schedules, and user bookings",
       },
-      servers: [{ url: `http://localhost:${PORT}/api/v1` }],
+      servers: [{ url: "/api/v1" }],
     },
     apis: ["./routes/*.js"],
   };

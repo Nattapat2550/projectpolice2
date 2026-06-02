@@ -13,10 +13,8 @@ const LoginPage = () => {
         e.preventDefault();
         setLoading(true);
 
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5003';
-
         try {
-            const response = await fetch(`${backendUrl}/api/v1/auth/login`, {
+            const response = await fetch(`/api/v1/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: username, password }),

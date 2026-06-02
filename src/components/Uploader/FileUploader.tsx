@@ -56,12 +56,9 @@ export default function FileUploader({ setExtractedData, progress, setProgress }
         });
 
         try {
-            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
-            
-            // ดึง Token จาก LocalStorage (หรือที่ที่คุณเก็บไว้)
             const token = localStorage.getItem("token"); 
 
-            const response = await axios.post(`${backendUrl}/api/v1/documents/process`, formData, {
+            const response = await axios.post(`/api/v1/documents/process`, formData, {
                 headers: { 
                     "Content-Type": "multipart/form-data",
                     "Authorization": `Bearer ${token}` // เพิ่ม Token ตรงนี้

@@ -25,9 +25,7 @@ export default function AllTask() {
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
-                const response = await fetch(`${backendUrl}/api/v1/tasks`);
-                
+                const response = await fetch(`/api/v1/tasks`);
                 if (response.ok) {
                     const data = await response.json();
                     if (data && data.length > 0) setTasks(data);
@@ -59,8 +57,7 @@ export default function AllTask() {
 
     const handleStatusChange = async (id: string, newStatus: TaskStatus) => {
         try {
-            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
-            const response = await fetch(`${backendUrl}/api/v1/tasks/${id}/status`, {
+            const response = await fetch(`/api/v1/tasks/${id}/status`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: newStatus }),
