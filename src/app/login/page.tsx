@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock, User } from 'lucide-react';
+import Swal from 'sweetalert2'; // 💡 นำเข้า SweetAlert2
 
 const LoginPage = () => {
     const [username, setUsername] = useState('');
@@ -13,8 +14,10 @@ const LoginPage = () => {
         e.preventDefault();
         setLoading(true);
 
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5003';
+
         try {
-            const response = await fetch(`/api/v1/auth/login`, {
+            const response = await fetch(`${backendUrl}/api/v1/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: username, password }),
@@ -25,19 +28,37 @@ const LoginPage = () => {
             if (response.ok) {
                 document.cookie = `token=${data.token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Strict; Secure`;
                 
-                // 💡 เพิ่ม 2 บรรทัดนี้: บันทึกข้อมูลลง LocalStorage เพื่อให้หน้าอื่นๆ (เช่น Uploaded.tsx) ดึงไปใช้ได้
+                // 💡 บันทึกข้อมูลลง LocalStorage เพื่อให้หน้าอื่นๆ (เช่น Uploaded.tsx) ดึงไปใช้ได้
                 localStorage.setItem("user_id", data.user.id);
                 localStorage.setItem("token", data.token); // เซฟ token ไว้เผื่อแนบไปกับ axios ตอนอัพโหลดไฟล์
+
+                // 💡 เพิ่มการแจ้งเตือนเมื่อเข้าสู่ระบบสำเร็จ
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'เข้าสู่ระบบสำเร็จ!',
+                    showConfirmButton: false,
+                    timer: 1500
+                });
 
                 // ใช้ window.location.href เพื่อบังคับโหลดหน้าใหม่ทั้งหมด
                 window.location.href = '/';
             } else {
-                alert(data.msg || 'Login failed');
+                // 💡 เปลี่ยนจาก alert เป็น Swal
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เข้าสู่ระบบไม่สำเร็จ',
+                    text: data.msg || 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง',
+                });
                 setLoading(false); // ปิดโหลดเมื่อล้มเหลว
             }
         } catch (error) {
             console.error('Error logging in:', error);
-            alert('Something went wrong. Please try again later.');
+            // 💡 เปลี่ยนจาก alert เป็น Swal
+            Swal.fire({
+                icon: 'error',
+                title: 'เกิดข้อผิดพลาด',
+                text: 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาลองใหม่อีกครั้ง',
+            });
             setLoading(false); // ปิดโหลดเมื่อมี Error
         }
     };

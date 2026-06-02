@@ -12,7 +12,7 @@ const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
 
 // 1. โหลด Config และ Database ก่อน
-dotenv.config({ path: "./config/config.env" });
+dotenv.config();
 const pool = require("./config/db"); // ตรวจสอบ path ให้ตรงกับโครงสร้างใหม่
 
 // 2. ตั้งค่าตัวแปรสำหรับ Next.js

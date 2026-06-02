@@ -10,8 +10,6 @@ export default function TopBar() {
     const [user, setUser] = useState<{ id: string; name: string; color?: string } | null>(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5003';
-
     // เช็คสถานะ Login
     useEffect(() => {
         const fetchUser = async () => {
@@ -19,7 +17,7 @@ export default function TopBar() {
                 const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
                 if (!token) return;
 
-                const res = await fetch(`${backendUrl}/api/v1/auth/me`, {
+                const res = await fetch(`/api/v1/auth/me`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
@@ -31,7 +29,7 @@ export default function TopBar() {
             }
         };
         fetchUser();
-    }, [backendUrl]);
+    }, []);
 
     // ปิด dropdown เมื่อคลิกที่อื่น
     useEffect(() => {
@@ -47,7 +45,7 @@ export default function TopBar() {
     const handleLogout = async () => {
         try {
             const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-            await fetch(`${backendUrl}/api/v1/auth/logout`, {
+            await fetch(`/api/v1/auth/logout`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
