@@ -25,7 +25,9 @@ export default function AllTask() {
     useEffect(() => {
         const fetchTasks = async () => {
             try {
-                const response = await fetch(`/api/v1/tasks`);
+                const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
+                const response = await fetch(`${backendUrl}/api/v1/tasks`);
+                
                 if (response.ok) {
                     const data = await response.json();
                     if (data && data.length > 0) setTasks(data);
@@ -57,7 +59,8 @@ export default function AllTask() {
 
     const handleStatusChange = async (id: string, newStatus: TaskStatus) => {
         try {
-            const response = await fetch(`/api/v1/tasks/${id}/status`, {
+            const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5003";
+            const response = await fetch(`${backendUrl}/api/v1/tasks/${id}/status`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ status: newStatus }),
@@ -128,29 +131,38 @@ export default function AllTask() {
     });
 
     return (
-        <div className="flex flex-col w-full h-full gap-6 min-h-[75vh]">
-            <div className="flex flex-col sm:flex-row justify-between gap-4">
-                <h1 className={styles.Header}>งานติดตามทั้งหมด</h1>
-                <Link 
-                    href={'/addFile'} 
-                    aria-label="ไปหน้าเพิ่มงานติดตามใหม่" 
-                    className={styles.Button} 
-                    style={{ 
-                        display: 'inline-flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        minHeight: '48px', 
-                        padding: '0 24px',
-                        margin: '4px 0', 
-                        textDecoration: 'none'
-                    }}
-                >
-                    + เพิ่มงานติดตาม
-                </Link>
-            </div>
+        <div className="flex flex-col w-full h-full min-h-[75vh]">
+            
 
             <div className={styles.ContentWrapper}>
                 <div className={styles.ContentContainer}>
+
+                    
+
+                    <div className="flex flex-col sm:flex-row justify-between gap-4">
+
+                        <h1 className={styles.Header} style={{ fontSize: "3rem", fontWeight: "bold", margin: "0.75rem" }}>
+                            งานติดตามทั้งหมด
+                        </h1>   
+
+                        <Link 
+                            href={'/addFile'} 
+                            aria-label="ไปหน้าเพิ่มงานติดตามใหม่" 
+                            className={styles.Button} 
+                            style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                justifyContent: 'center', 
+                                minHeight: '48px', 
+                                padding: '0 24px',
+                                margin: '12px 16px',
+                                textDecoration: 'none'
+                            }}
+                        >
+                            + เพิ่มงานติดตาม
+                        </Link>
+                    </div>
+
                     <div className={styles.ContentHeader}>
                         
                         {/* 💡 Replaced raw HTML select with our Custom Status Component */}

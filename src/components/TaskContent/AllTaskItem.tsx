@@ -4,6 +4,8 @@ import styles from "./TaskItem.module.css"
 import Select from "react-select";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 type AssigneeData = {
   name: string;
@@ -21,7 +23,7 @@ type TaskItemProps = {
   onStatusChange: (id: string, status: TaskStatus) => void;
 };
 
-type TaskStatus = "following" | "problem" | "completed";
+type TaskStatus = "following" |"completed";
 
 type StatusOption = {
   value: TaskStatus;
@@ -29,6 +31,7 @@ type StatusOption = {
 };
 
 export default function AllTaskItem({date, createdAt, name, personInCharge, assigneesData, status, id, onStatusChange}:TaskItemProps){
+    const router = useRouter();
     
     const parsedDate = new Date(date);
     const day = parsedDate.getDate();
@@ -96,13 +99,11 @@ export default function AllTaskItem({date, createdAt, name, personInCharge, assi
 
     const statusOption: StatusOption[] = [
         { value: "following", label: "กำลังติดตาม" },
-        { value: "problem", label: "เกิดปัญหา" },
         { value: "completed", label: "เสร็จสิ้น" },
     ];
 
     const selectThemeMap = {
         following: { color: "var(--yellowText)", bg: "var(--yellowBG)", border: "var(--yellowBorder)" },
-        problem: { color: "var(--redText)", bg: "var(--redBG)", border: "var(--redBorder)" },
         completed: { color: "var(--greenText)", bg: "var(--greenBG)", border: "var(--greenBorder)" },
     } as const;
 
@@ -132,29 +133,53 @@ export default function AllTaskItem({date, createdAt, name, personInCharge, assi
                         <h1 className={styles.Header} title={name}>{name}</h1>
                         <div className={`${styles.DetailContainer} mt-2 w-full pr-4 flex flex-col`}>
                             
-                            <div className="flex flex-col sm:flex-row sm:items-start gap-2 mb-2">
-                                <strong className="mt-0.5 whitespace-nowrap text-sm">ผู้รับผิดชอบ: </strong> 
-                                <div className="flex flex-wrap gap-1.5">
-                                    {assigneesData && assigneesData.length > 0 ? (
-                                        assigneesData.map((assignee, idx) => (
-                                            <span 
-                                                key={idx} 
-                                                style={{ backgroundColor: assignee.color, color: getTextColor(assignee.color) }} 
-                                                className="px-2.5 py-0.5 rounded-md text-xs sm:text-sm font-bold whitespace-nowrap shadow-sm border border-black/10"
-                                            >
-                                                {assignee.name}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        personInCharge.split(',').map((person, idx) => (
-                                            <span key={idx} className="px-2.5 py-0.5 rounded-md text-xs sm:text-sm font-bold whitespace-nowrap shadow-sm bg-(--wrapper) text-foreground">
-                                                {person.trim()}
-                                            </span>
-                                        ))
-                                    )}
-                                </div>
-                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                                {assigneesData && assigneesData.length > 0 ? (
+                                    assigneesData.map((assignee, idx) => {
+                                        const hex = assignee.color.replace('#', '');
+                                        const r = parseInt(hex.substring(0,2),16);
+                                        const g = parseInt(hex.substring(2,4),16);
+                                        const b = parseInt(hex.substring(4,6),16);
 
+                                        // คำนวณ luminance เพื่อเลือกตัวอักษรขาวหรือดำ
+                                        const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+                                        const onColor = luminance > 0.5 ? '0,0,0' : '255,255,255';
+
+                                        return (
+                                            <span
+                                            key={idx}
+                                            className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-xs sm:text-sm font-bold whitespace-nowrap assignee-badge"
+                                            style={{
+                                                ['--badge-bg-light' as string]: `rgba(${r},${g},${b},0.15)`,
+                                                ['--badge-bg-dark' as string]:  `rgba(${r},${g},${b},0.85)`,
+                                                ['--badge-border-light' as string]: `rgba(${r},${g},${b},0.4)`,
+                                                ['--badge-border-dark' as string]:  `rgba(${r},${g},${b},0.9)`,
+                                                ['--badge-text-light' as string]: `rgba(${r*0.4},${g*0.4},${b*0.4},1)`,
+                                                ['--badge-text-dark' as string]:  `rgba(${onColor},1)`,
+                                            } as React.CSSProperties}
+                                            >
+                                            <span
+                                                className="w-2 h-2 rounded-full flex-shrink-0 badge-dot"
+                                                style={{ 
+                                                    ['--dot-color' as string]: assignee.color,
+                                                } as React.CSSProperties}
+                                                ></span>
+                                            {assignee.name}
+                                            </span>
+                                        );
+                                    })
+                                    ) : (
+                                    personInCharge.split(',').map((person, idx) => (
+                                        <span 
+                                            key={idx} 
+                                            className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs sm:text-sm font-bold whitespace-nowrap shadow-sm bg-(--wrapper) text-foreground"
+                                        >
+                                            <span className="w-2 h-2 rounded-full flex-shrink-0 bg-gray-400"></span>
+                                            {person.trim()}
+                                        </span>
+                                    ))
+                                )}
+                            </div>
                             <p className="flex flex-col sm:flex-row mb-1 text-sm whitespace-nowrap">
                                 <strong>สถานะระยะเวลา: &nbsp; </strong>  
                                 <span>{diffDays < 0
@@ -169,7 +194,7 @@ export default function AllTaskItem({date, createdAt, name, personInCharge, assi
                                     className="h-full rounded-full transition-all duration-500 ease-in-out" 
                                     style={{ 
                                         width: `${progressPercent}%`,
-                                        backgroundColor: progressColor // <-- This applies the CSS variable safely
+                                        backgroundColor: progressColor 
                                     }}
                                 ></div>
                             </div>
@@ -187,6 +212,25 @@ export default function AllTaskItem({date, createdAt, name, personInCharge, assi
                             value={statusOption.find((option) => option.value === taskStatus) || statusOption[0]}
                             isClearable={false}
                             onChange={(selectedOption) => {
+                                // 💡 ดักความถูกต้องของ Token ก่อนให้เปลี่ยนค่าใน Dropdown หน้ารวม
+                                const localToken = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+                                const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+                                const token = (localToken && localToken !== "undefined") ? localToken : (cookieToken || null);
+
+                                if (!token) {
+                                    Swal.fire({
+                                        icon: 'warning',
+                                        title: 'ไม่อนุญาต',
+                                        text: 'กรุณาเข้าสู่ระบบก่อนทำการเปลี่ยนสถานะงาน',
+                                        confirmButtonText: 'เข้าสู่ระบบ',
+                                        showCancelButton: true,
+                                        cancelButtonText: 'ยกเลิก'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) router.push('/login');
+                                    });
+                                    return;
+                                }
+
                                 const newStatus = selectedOption!.value;
                                 setStatus(newStatus);
                                 onStatusChange(id, newStatus);

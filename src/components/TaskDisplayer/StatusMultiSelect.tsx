@@ -18,7 +18,6 @@ export default function StatusMultiSelect({
     // Explicitly define statuses with labels for presentation
     const availableStatuses = [
         { value: "following", label: "กำลังติดตาม" },
-        { value: "problem", label: "เกิดปัญหา" },
         { value: "completed", label: "เสร็จสิ้น" }
     ];
 

@@ -64,25 +64,17 @@ exports.login = async (req, res, next) => {
 
     const user = await User.findOne({ name });
     if (!user) {
-      // เปลี่ยนเป็น 401 (Unauthorized) ให้เหมาะสมกับการเข้าสู่ระบบ
-      return res.status(401).json({ success: false, msg: "Invalid credentials (ไม่พบชื่อผู้ใช้งาน)" });
-    }
-
-    // ป้องกันบัคกรณีข้อมูลผู้ใช้ในฐานข้อมูลเก่าไม่มีคอลัมน์รหัสผ่าน
-    if (!user.password) {
-      return res.status(401).json({ success: false, msg: "Invalid credentials (ข้อมูลรหัสผ่านมีปัญหา)" });
+      return res.status(400).json({ success: false, msg: "Invalid credentials" });
     }
 
     const isMatch = await User.matchPassword(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, msg: "Invalid credentials (รหัสผ่านไม่ถูกต้อง)" });
+      return res.status(401).json({ success: false, msg: "Invalid credentials" });
     }
 
     sendTokenResponse(user, 200, res);
   } catch (err) {
-    console.error("🔥 Login Error:", err.stack); // พิมพ์ Error ลง Terminal ให้เห็นชัดเจน
-    // ส่ง Error กลับไปที่ Frontend เพื่อให้ Alert บอกปัญหาที่แท้จริง
-    return res.status(500).json({ success: false, msg: err.message || "Server error" });
+    return res.status(500).json({ success: false, msg: "Server error" });
   }
 };
 

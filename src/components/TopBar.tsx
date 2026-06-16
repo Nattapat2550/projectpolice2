@@ -10,34 +10,19 @@ export default function TopBar() {
     const [user, setUser] = useState<{ id: string; name: string; color?: string } | null>(null);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
-    
-    // 💡 เพิ่ม backendUrl แบบเดียวกับหน้า Login
     const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:5003';
 
     // เช็คสถานะ Login
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                // 💡 อ่าน token จาก localStorage เป็นอันดับแรก หรืออ่านจาก cookie
-                const localToken = localStorage.getItem('token');
-                const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-                const token = localToken || cookieToken;
-
-                // 💡 ถ้าใน localStorage มีชื่ออยู่ เอามาใช้ชั่วคราวก่อนเพื่อไม่ให้ UI กระตุก
-                const localId = localStorage.getItem('user_id');
-                const localName = localStorage.getItem('user_name');
-                if (localId && localName && !user) {
-                    setUser({ id: localId, name: localName });
-                }
-
+                const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
                 if (!token) return;
 
-                // 💡 เติม backendUrl เข้าไปที่ path ของ API
                 const res = await fetch(`${backendUrl}/api/v1/auth/me`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 const data = await res.json();
-                
                 if (data.success) {
                     setUser(data.data);
                 }
@@ -46,7 +31,7 @@ export default function TopBar() {
             }
         };
         fetchUser();
-    }, []);
+    }, [backendUrl]);
 
     // ปิด dropdown เมื่อคลิกที่อื่น
     useEffect(() => {
@@ -61,26 +46,21 @@ export default function TopBar() {
 
     const handleLogout = async () => {
         try {
-            const localToken = localStorage.getItem('token');
-            const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
-            const token = localToken || cookieToken;
+            const token = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+            await fetch(`${backendUrl}/api/v1/auth/logout`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             
-            if (token) {
-                // 💡 เติม backendUrl เข้าไปตอนเรียก API เคลียร์ session
-                await fetch(`${backendUrl}/api/v1/auth/logout`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-            }
-        } catch (err) {
-            console.error("Logout error", err);
-        } finally {
-            // 💡 เคลียร์ข้อมูลทั้งหมดให้เกลี้ยง
+            // 💡 ล้างข้อมูลออกจากทั้ง Cookie และ LocalStorage ให้เกลี้ยง
             document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-            localStorage.removeItem('token');
-            localStorage.removeItem('user_id');
-            localStorage.removeItem('user_name');
+            localStorage.removeItem("token");
+            localStorage.removeItem("user_id");
+            localStorage.removeItem("userId");
+
             setUser(null);
             window.location.href = '/login';
+        } catch (err) {
+            console.error("Logout error", err);
         }
     };
 
@@ -109,11 +89,21 @@ export default function TopBar() {
             <div className="flex items-center gap-2 sm:gap-4 shrink-0">
                 <DarkModeBtn />
 
-                <Link href="/help" aria-label="ไปหน้าช่วยเหลือการใช้งาน">
-                    <button className="flex items-center gap-1 sm:gap-2 hover:bg-white/10 px-2 sm:px-4 py-2 rounded-lg transition-colors">
-                        <Image src="/window.svg" alt="ไอคอนช่วยเหลือ" width={24} height={24} className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
-                        <span className="font-medium hidden md:inline text-white">ช่วยเหลือ</span>
-                    </button>
+                <Link
+                    href="/dashboard"
+                    aria-label="ไปหน้า Dashboard"
+                    className="flex items-center gap-1 sm:gap-2 hover:bg-white/10 px-2 sm:px-4 py-2 rounded-lg transition-colors"
+                >
+                    <span className="font-medium hidden md:inline text-white">Dashboard</span>
+                </Link>
+
+                <Link
+                    href="/help"
+                    aria-label="ไปหน้าช่วยเหลือการใช้งาน"
+                    className="flex items-center gap-1 sm:gap-2 hover:bg-white/10 px-2 sm:px-4 py-2 rounded-lg transition-colors"
+                >
+                    <Image src="/window.svg" alt="ไอคอนช่วยเหลือ" width={24} height={24} className="w-5 h-5 sm:w-6 sm:h-6 shrink-0" />
+                    <span className="font-medium hidden md:inline text-white">ช่วยเหลือ</span>
                 </Link>
 
                 {user ? (

@@ -25,7 +25,7 @@ type Props = {
     ) => void;
 };
 
-type TaskStatus = "following" | "problem" | "completed";
+type TaskStatus = "following" | "completed";
 
 export default function TaskDisplayer({
     tasks,

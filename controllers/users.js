@@ -25,8 +25,11 @@ exports.updateMyProfile = async (req, res, next) => {
         if (name) updateData.name = name;
         if (color) updateData.color = color;
 
+        if (name&&name===req.user.name) 
+            return res.status(400).json({ success: false, message: "ชื่อซ้ำ" });
+            
         // ใช้ dynamic update จาก User model
-        const user = await User.findByIdAndUpdate(req.user.id, updateData);
+        const user = await User.findByIdAndUpdate(req.user.id, updateData, { new: true });
         res.status(200).json({ success: true, data: user });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });

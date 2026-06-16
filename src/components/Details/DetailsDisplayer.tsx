@@ -1,7 +1,10 @@
+"use client"
+
 import styles from "./Details.module.css"
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
-// ฟังก์ชันคำนวณสีตัวอักษรให้อ่านง่าย
 const getTextColor = (bgColor: string) => {
     if (!bgColor || !bgColor.startsWith('#')) return '#1f2937'; 
     const hex = bgColor.replace('#', '');
@@ -12,7 +15,6 @@ const getTextColor = (bgColor: string) => {
     return (yiq >= 128) ? '#1f2937' : '#ffffff';
 };
 
-// 💡 เพิ่มฟังก์ชันแปลงข้อความ **ให้กลายเป็นตัวหนา**
 const formatText = (text: string) => {
     if (!text) return "ไม่พบข้อความเนื้อหาในเอกสาร";
     const parts = text.split(/(\*\*.*?\*\*)/g);
@@ -33,6 +35,7 @@ export default function DetailsDisplayer({
     setTaskData: any; 
     isEditing: boolean; 
 }) {
+    const router = useRouter();
     const [users, setUsers] = useState<any[]>([]);
 
     useEffect(() => {
@@ -118,6 +121,25 @@ export default function DetailsDisplayer({
     };
 
     const handleToggleComplete = async (assignIndex: number, topicIndex: number) => {
+        // 💡 ตรวจสอบ Token อย่างละเอียด
+        const localToken = typeof window !== 'undefined' ? localStorage.getItem("token") : null;
+        const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        const token = (localToken && localToken !== "undefined") ? localToken : (cookieToken || null);
+
+        if (!token) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'กรุณาเข้าสู่ระบบ',
+                text: 'คุณต้องเข้าสู่ระบบก่อนจึงจะอัปเดตสถานะงานนี้ได้',
+                showCancelButton: true,
+                confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) router.push('/login');
+            });
+            return;
+        }
+
         let newAssignmentsData: any = null;
 
         setTaskData((prev: any) => {
@@ -153,7 +175,6 @@ export default function DetailsDisplayer({
         }
     };
 
-
     return (
         <div className="flex flex-col w-full h-full gap-6 min-h-120">
             <div className={styles.ContentWrapper}>
@@ -178,7 +199,6 @@ export default function DetailsDisplayer({
                                     📄 เปิดดูไฟล์เอกสารต้นฉบับ
                                 </a>
                             )}
-                            {/* 💡 เพิ่ม maxHeight และ overflowY เพื่อสร้าง Scrollbar */}
                             <div className={styles.TextArea} style={{ 
                                 padding: '1rem', 
                                 whiteSpace: "pre-wrap", 
@@ -188,7 +208,6 @@ export default function DetailsDisplayer({
                                 overflowY: 'auto',
                                 borderRadius: '8px'
                             }}>
-                                {/* 💡 เรียกใช้ formatText เพื่อเรนเดอร์ตัวหนา */}
                                 {taskData?.main_text ? formatText(taskData.main_text) : "ไม่พบข้อความเนื้อหาในเอกสาร"}
                             </div>
                         </div>

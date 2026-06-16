@@ -4,6 +4,8 @@ import styles from "./Details.module.css"
 import Select from "react-select";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import Swal from "sweetalert2";
 
 type TaskStatus = "following" | "problem" | "completed";
 
@@ -31,11 +33,41 @@ export default function DetailsPanel({
     onUpdateTask,
     onDeleteTask
 }: TaskItemProps) {
+    const router = useRouter();
     const [taskStatus, setStatus] = useState<TaskStatus>((taskData?.status as TaskStatus) || "following");
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
     
+    // 💡 ฟังก์ชันตรวจสอบสถานะ Login ที่ถูกต้องแม่นยำ
+    const getValidToken = () => {
+        if (typeof window === 'undefined') return null;
+        const localToken = localStorage.getItem("token");
+        const cookieToken = document.cookie.split('; ').find(row => row.startsWith('token='))?.split('=')[1];
+        return (localToken && localToken !== "undefined") ? localToken : (cookieToken || null);
+    };
+
     useEffect(() => {
         if (taskData?.status) setStatus(taskData.status as TaskStatus);
+        setIsLoggedIn(!!getValidToken());
     }, [taskData?.status]);
+
+    const checkAuthAndExecute = (action: () => void) => {
+        if (!getValidToken()) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'ต้องเข้าสู่ระบบ',
+                text: 'คุณต้องเข้าสู่ระบบก่อนจึงจะสามารถจัดหรือแก้ไขข้อมูลนี้ได้',
+                confirmButtonText: 'ไปหน้าเข้าสู่ระบบ',
+                showCancelButton: true,
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    router.push('/login');
+                }
+            });
+            return;
+        }
+        action();
+    };
 
     const parsedDate = new Date(taskData?.date || "");
     const isValidDate = !isNaN(parsedDate.getTime());
@@ -84,7 +116,6 @@ export default function DetailsPanel({
 
     const statusOption: StatusOption[] = [
         { value: "following", label: "กำลังติดตาม" },
-        { value: "problem", label: "เกิดปัญหา" },
         { value: "completed", label: "เสร็จสิ้น" },
     ];
 
@@ -143,17 +174,6 @@ export default function DetailsPanel({
                                                         }} 
                                                     />
                                                 </div>
-                                                {/* เพิ่ม Checkbox สำหรับกำหนดงานเร่งด่วน */}
-                                                <div className="flex flex-row items-center gap-2 mt-1">
-                                                    <input 
-                                                        type="checkbox" 
-                                                        id="isUrgent"
-                                                        checked={taskData?.isUrgent || false}
-                                                        onChange={(e) => setTaskData({ ...taskData, isUrgent: e.target.checked })}
-                                                        style={{ width: '1.2rem', height: '1.2rem', cursor: 'pointer', accentColor: 'var(--redText)' }}
-                                                    />
-                                                    <label htmlFor="isUrgent" style={{ cursor: 'pointer' }}><strong>กำหนดเป็นงานเร่งด่วน</strong></label>
-                                                </div>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col gap-1 mt-3">
@@ -167,7 +187,6 @@ export default function DetailsPanel({
                                                         {timeRemainingDisplay}
                                                     </span>
                                                 </p>
-                                                {/* แสดงป้ายความเร่งด่วน */}
                                                 {taskData?.isUrgent && (
                                                     <p className="flex flex-row text-sm mt-1">
                                                         <span style={{ fontWeight: 'bold', color: 'var(--redText)', backgroundColor: 'var(--redBG)', padding: '0.1rem 0.6rem', borderRadius: '0.4rem' }}>
@@ -192,9 +211,11 @@ export default function DetailsPanel({
                                         value={statusOption.find((option) => option.value === taskStatus)}
                                         isClearable={false}
                                         onChange={(selectedOption) => {
-                                            const newStatus = selectedOption!.value;
-                                            setStatus(newStatus);
-                                            onStatusChange(taskData?.id?.toString(), newStatus);
+                                            checkAuthAndExecute(() => {
+                                                const newStatus = selectedOption!.value;
+                                                setStatus(newStatus);
+                                                onStatusChange(taskData?.id?.toString(), newStatus);
+                                            });
                                         }}
                                         menuPortalTarget={typeof document !== "undefined" ? document.body : null}
                                         isSearchable={false}
@@ -233,9 +254,13 @@ export default function DetailsPanel({
                                     style={{ padding: '0.6rem', color: 'var(--header)', outline: 'none' }}
                                     rows={4} 
                                     value={taskData?.notes || ""} 
-                                    onChange={(e) => setTaskData({ ...taskData, notes: e.target.value })}
+                                    onChange={(e) => {
+                                        if (isLoggedIn) setTaskData({ ...taskData, notes: e.target.value });
+                                    }}
+                                    placeholder={isLoggedIn ? "พิมพ์บันทึกเพิ่มเติมที่นี่..." : "🔒 กรุณาเข้าสู่ระบบเพื่อแก้ไขข้อความบันทึกเพิ่มเติม"}
+                                    disabled={!isLoggedIn} // 💡 ล็อกช่องพิมพ์ทันทีถ้าไม่ได้ Login
                                 ></textarea>
-                                <button className={styles.Clickable} onClick={onUpdateTask}>บันทึกข้อมูลและบันทึกเพิ่มเติม</button>
+                                <button className={styles.Clickable} onClick={() => checkAuthAndExecute(onUpdateTask)}>บันทึกข้อมูลและบันทึกเพิ่มเติม</button>
                             </div>
                         </div>
                     </div>
@@ -250,19 +275,19 @@ export default function DetailsPanel({
                     {isEditing ? (
                         <button 
                             className={`${styles.Clickable} ${styles.Green}`} 
-                            onClick={onUpdateTask}
+                            onClick={() => checkAuthAndExecute(onUpdateTask)}
                         >
                             ตกลง (บันทึกข้อมูล)
                         </button>
                     ) : (
                         <button 
                             className={`${styles.Clickable} ${styles.Yellow}`} 
-                            onClick={() => setIsEditing(true)}
+                            onClick={() => checkAuthAndExecute(() => setIsEditing(true))}
                         >
                             แก้ไขข้อมูล
                         </button>
                     )}
-                    <button className={`${styles.Clickable} ${styles.Red}`} onClick={onDeleteTask}>ลบงานติดตามนี้</button>
+                    <button className={`${styles.Clickable} ${styles.Red}`} onClick={() => checkAuthAndExecute(onDeleteTask)}>ลบงานติดตามนี้</button>
                 </div>
             </div>
         </div>
